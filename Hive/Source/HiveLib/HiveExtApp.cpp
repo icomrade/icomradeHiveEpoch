@@ -17,6 +17,7 @@
 */
 
 #include "HiveExtApp.h"
+#include "md5.c" //for call 777 (located in boost dir) http://www.zedwood.com/article/cpp-md5-function
 
 #include <boost/bind.hpp>
 #include <boost/optional.hpp>
@@ -155,6 +156,12 @@ HiveExtApp::HiveExtApp(string suffixDir) : AppServer("HiveExt",suffixDir), _serv
 	handlers[203] = boost::bind(&HiveExtApp::playerInit,this,_1);
 	handlers[204] = boost::bind(&HiveExtApp::updateGroup, this,_1);		//update player group in player_data
 	handlers[205] = boost::bind(&HiveExtApp::updateGlobalCoins, this, _1);	//update global coins in player_data - use existing calls 303/309 for saving object_data coins. use 201 for character coins
+	//CUSTOM SCRIPTS.LOG SCANNER
+	handlers[777] = boost::bind(&HiveExtApp::BEScriptScan, this, _1);
+	//Virtual garage
+	handlers[800] = boost::bind(&HiveExtApp::VGQueryVeh, this, _1);
+	handlers[801] = boost::bind(&HiveExtApp::VGSpawnVeh, this, _1);
+	handlers[802] = boost::bind(&HiveExtApp::VGStoreVeh, this, _1);
 }
 
 #include <boost/lexical_cast.hpp>
@@ -688,6 +695,217 @@ Sqf::Value HiveExtApp::updateGlobalCoins(Sqf::Parameters params)
 	Int64 playerBank = Sqf::GetBigInt(params.at(3));
 
 	return ReturnBooleanStatus(_charData->updatePlayerCoins(playerId, getServerId(), coinsValue, playerBank));
+}
+Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
+{
+	//DON'T FORGET TO ROTATE YOUR SCRIPTS.LOG EVERY RESTART, OTHERWISE THIS WILL BE SLOW AS FUCK
+	Poco::AutoPtr<Poco::Util::AbstractConfiguration> BEConf(config().createView("Battleye"));
+	string StringScan = BEConf->getString("ScriptsLogLine", "DISABLED");
+	string BansFile = BEConf->getString("BansPath", "DISABLED");
+	string LogFile = BEConf->getString("ScriptsLogPath", "DISABLED");
+	Int64 steamID = Sqf::GetBigInt(params.at(0));
+
+	//we need time now mm.dd.yyyy hh:mm:ss:
+	//we'll only check the current date, hour and minute +/- 1
+	boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
+	/*Int64 yr = timeLocal.date().year();
+	string yrstr = std::to_string(yr);
+
+	Int64 mn = timeLocal.date().month();
+	string mnstr = std::to_string(mn);
+	if (mn < 10) mnstr = "0" + mnstr;
+
+	Int64 day = timeLocal.date().day();
+	string daystr = std::to_string(day);
+	if (day < 10) daystr = "0" + daystr;*/
+
+	Int64 hr = timeLocal.time_of_day().hours();
+	string hrstra = std::to_string(hr);
+	if (hr < 10) hrstra = "0" + hrstra;
+	string hrstrmn = hrstra;
+	string hrstrmx = hrstra;
+
+	Int64 min = timeLocal.time_of_day().minutes();
+	string minstra = std::to_string(min);
+	string minstrmn = std::to_string(min - 1);
+	string minstrmx = std::to_string(min + 1);
+	if (min < 10) {
+		minstra = "0" + minstra;
+		if (min < 9) {
+			minstrmx = "0" + std::to_string(min + 1); 
+			if (min < 1) {
+				minstrmn = "59";
+				if (hr < 1) {
+					hrstrmn = "23";
+				}
+				else if (hr <= 10) {
+					hrstrmn = "0" + std::to_string(hr - 1);
+				}
+				else {
+					hrstrmn = std::to_string(hr - 1);
+				}
+			}
+			else {
+				minstrmn = "0" + std::to_string(min - 1);
+			}
+		}
+		else {
+			minstrmx = std::to_string(min + 1);
+		}
+	}
+	else if (min == 59) 
+	{
+		minstrmx = "00";
+		if (hr == 23) {
+			hrstrmx = "00";
+		}
+	}
+	//Int32 sec = timeLocal.time_of_day().seconds();
+	
+	string dateTimeMin = hrstrmn + ":" + minstrmn + ":";
+	string dateTimeActual = hrstra + ":" + minstra + ":";
+	string dateTimeMax = hrstrmx + ":" + minstrmx + ":";
+
+	bool match = true;
+	vector<string> logLines;
+	string testLine;
+	string checkLine;
+	string BEGUID;
+	std::stringstream bestring;
+	Int8 i = 0, parts[8] = { 0 };
+
+	if (StringScan != "DISABLED" && BansFile != "DISABLED" && LogFile != "DISABLED") {
+		//we are lazy so we send PUID to the HiveExt in order to get the GUID, thanks to Fank for the code https://gist.github.com/Fank/11127158
+		//Extra precaution should be taken to ensure the user is not spoofing the PUID (which should not be possible with A2 OA Steam Edition or requiredSecureId=2)
+		do parts[i++] = steamID & 0xFF;
+		while (steamID >>= 8);
+
+		bestring << "BE";
+		for (int i = 0; i < sizeof(parts); i++) {
+			bestring << char(parts[i]);
+		}
+		BEGUID = md5(bestring.str());
+
+		//open our scripts.log
+		std::ifstream scriptsLog(LogFile);
+		if (!scriptsLog.is_open())
+		{
+			logger().error("Failed to open scripts.log file!");
+			//match = true; //Don't ban for our problem
+		} else {
+			match = false;
+			while (getline(scriptsLog, testLine).good()) {
+				logLines.push_back (testLine);
+				//logger().error(testLine);
+			}
+			//match = false;
+			scriptsLog.close();
+
+			while (!logLines.empty())
+			{
+				checkLine = logLines.back();
+				if (checkLine.find(StringScan) != std::string::npos) {
+					if  (
+						(checkLine.find(dateTimeMin) != std::string::npos) ||
+						(checkLine.find(dateTimeActual) != std::string::npos) ||
+						(checkLine.find(dateTimeMax) != std::string::npos)
+						) 
+					{
+						//if time +/- 1 and string found player is legit
+						match = true;
+						logger().notice("Succesfully found player in scripts.log with log text: '" + checkLine + "'");
+						break;
+					}
+					else {
+						logger().debug("Time min, actual, and max:" + dateTimeMin + " -- " + dateTimeActual + " -- " + dateTimeMax + " -- " + " Not found compared to string:  " + checkLine);
+					}
+				}
+				else {
+					logger().debug("Could not find 'ScriptsLogLine' " + StringScan + "for player with GUID: " + BEGUID);
+				}
+				logLines.pop_back();
+			}
+
+			if (!match) {
+				std::ofstream out;
+				out.open(BansFile, std::ios::app);
+				out << std::endl << BEGUID << " -1 scripts filter bypass";
+				out.close();
+			}
+		}
+	}
+	return match;
+}
+
+Sqf::Value HiveExtApp::VGQueryVeh(Sqf::Parameters params)
+{
+	string playerUID = Sqf::GetStringAny(params.at(0));
+	return _objData->GetMyVGVehs(playerUID);
+}
+
+Sqf::Value HiveExtApp::VGSpawnVeh(Sqf::Parameters params)
+{
+	Int64 VehID = Sqf::GetBigInt(params.at(0));
+	Sqf::Value worldSpace = boost::get<Sqf::Parameters>(params.at(1));
+	Int64 uniqueId = Sqf::GetBigInt(params.at(2));
+
+	Sqf::Parameters returnVal = _objData->VgSelectSpawnVeh(worldSpace, VehID, uniqueId);
+
+	if (Sqf::GetStringAny(returnVal[0]) == "PASS") {
+		string classname = boost::get<string>(returnVal[1]);
+		Int64 CharacterID = Sqf::GetBigInt(returnVal[2]);
+		Sqf::Value Inventory = boost::get<Sqf::Parameters>(returnVal[3]);
+		Sqf::Value hitPoints = boost::get<Sqf::Parameters>(returnVal[4]);
+		double fuel = Sqf::GetDouble(returnVal[5]);
+		double damage = Sqf::GetDouble(returnVal[6]);
+		string colour = Sqf::GetStringAny(returnVal[7]);
+		string colour2 = Sqf::GetStringAny(returnVal[8]);
+
+		Sqf::Parameters myRet2 = ReturnBooleanStatus(_objData->createObject(getServerId(), classname, damage, CharacterID, worldSpace, Inventory, hitPoints, fuel, uniqueId));
+
+		if (boost::get<string>(myRet2[0]) == "PASS") {
+			ReturnBooleanStatus(_objData->DeleteMyVGVeh(VehID));
+		}
+		else {
+			logger().error("Failed to create object when removing from virtual garage, DB will not delete the requested object (as it shouldn't spawn anyway)");
+			returnVal.clear();
+			returnVal.push_back(string("ERROR"));
+		}
+	}
+	else {
+		logger().error("ERROR spawning virtual garage vehicle. worldspace = " + lexical_cast<string>(worldSpace) + " VehID = " + lexical_cast<string>(VehID) + "uniqueID = " + lexical_cast<string>(uniqueId));
+		returnVal.clear();
+		returnVal.push_back(string("ERROR"));
+	}
+	return returnVal;
+}
+
+Sqf::Value HiveExtApp::VGStoreVeh(Sqf::Parameters params)
+{
+	string PlayerUID = Sqf::GetStringAny(params.at(0));
+	string PlayerName = Sqf::GetStringAny(params.at(1));
+	string DisplayName = Sqf::GetStringAny(params.at(2));
+	string ClassName = Sqf::GetStringAny(params.at(3));
+	string ObjCID = Sqf::GetStringAny(params.at(4));
+	Sqf::Value inventory = boost::get<Sqf::Parameters>(params.at(5));
+	Sqf::Value hitPoints = boost::get<Sqf::Parameters>(params.at(6));
+	double fuel = Sqf::GetDouble(params.at(7));
+	double Damage = Sqf::GetDouble(params.at(8));
+	string Colour = Sqf::GetStringAny(params.at(9));
+	string Colour2 = Sqf::GetStringAny(params.at(10));
+
+	boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
+	Int64 yr = timeLocal.date().year();
+	string yrstr = std::to_string(yr);
+	Int64 mn = timeLocal.date().month();
+	string mnstr = std::to_string(mn);
+	if (mn < 10) mnstr = "0" + mnstr;
+	Int64 day = timeLocal.date().day();
+	string daystr = std::to_string(day);
+	if (day < 10) daystr = "0" + daystr;
+	string DateStored = daystr + "-" + mnstr + "-" + yrstr;
+
+	return ReturnBooleanStatus(_objData->UpdateVGStoreVeh(PlayerUID, PlayerName, DisplayName, ClassName, DateStored, ObjCID, inventory, hitPoints, fuel, Damage, Colour, Colour2));
 }
 
 namespace

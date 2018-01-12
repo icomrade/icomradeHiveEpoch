@@ -69,6 +69,12 @@ bool DirectHiveApp::initialiseService()
 		_objData.reset(new SqlObjDataSource(logger(),_objDb,objConf.get()));
 	}
 
+	/*//Create Virtual Garage datasource
+	{
+		Poco::AutoPtr<Poco::Util::AbstractConfiguration> vgDBConf(config().createView("garage"));
+		_vgData.reset(new SqlGarageDataSource(logger(), _charDb, vgDBConf.get()));
+	}*/
+
 	//Create custom datasource
 	_customData.reset(new CustomDataSource(logger(),_charDb,_objDb));
 

@@ -32,7 +32,7 @@
     <ProjectGuid>{3A94A40D-418F-4890-829D-7CD16EA1AB6C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DatabasePostgre</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

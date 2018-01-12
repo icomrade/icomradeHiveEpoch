@@ -42,11 +42,20 @@ public:
 	bool createObject( int serverId, const string& className, double damage, Int64 characterId, 
 		const Sqf::Value& worldSpace, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, Int64 uniqueId ) override;
 	Sqf::Value fetchObjectId( int serverId, Int64 objectIdent ) override;
+	//VG
+	bool UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored,
+		const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2) override;
+
+	Sqf::Parameters VgSelectSpawnVeh(const Sqf::Value& worldSpace, Int64 VehID, Int64 uniqueId) override;
+	bool DeleteMyVGVeh(Int64 VehID) override;
+	Sqf::Value GetMyVGVehs(const string& playerUID) override;
 private:
 	string _objTableName;
 	int _cleanupPlacedDays;
 	bool _vehicleOOBReset;
 	string _maintenanceObjs;
+	string _garageTableName;
+	int _cleanupStoredDays;
 
 	//statement ids
 	SqlStatementID _stmtChangeObjectUID;
@@ -62,4 +71,30 @@ private:
 	SqlStatementID _stmtUpdateVehicleMovement;
 	SqlStatementID _stmtUpdateVehicleStatus;
 	SqlStatementID _stmtCreateObject;
+	SqlStatementID _stmtVGStoreVeh;
+	SqlStatementID _stmtVGDelVeh;
+	SqlStatementID _stmtVGCleanupStored;
+}; 
+/*
+class SqlGarageDataSource : public SqlDataSource, public GarageDataSource
+{
+public:
+	SqlGarageDataSource(Poco::Logger& logger, shared_ptr<Database> db, const Poco::Util::AbstractConfiguration* conf);
+	~SqlGarageDataSource() {}
+
+	bool UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored,
+		const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2) override;
+
+	Sqf::Parameters VgSelectSpawnVeh(const Sqf::Value& worldSpace, const string& VehID, Int64 uniqueId) override;
+	bool DeleteMyVGVeh(const string& VehID) override;
+	Sqf::Value GetMyVGVehs(const string& playerUID) override;
+
+private:
+	string _garageTableName;
+	int _cleanupStoredDays;
+
+	SqlStatementID _stmtVGStoreVeh;
+	SqlStatementID _stmtVGDelVeh;
+	SqlStatementID _stmtVGCleanupStored;
 };
+*/

@@ -61,6 +61,7 @@ protected:
 
 	unique_ptr<CharDataSource> _charData;
 	unique_ptr<ObjDataSource> _objData;
+	//unique_ptr<GarageDataSource> _vgData;
 	unique_ptr<CustomDataSource> _customData;
 
 	string _initKey;
@@ -100,6 +101,11 @@ private:
 	Sqf::Value playerDeath(Sqf::Parameters params);
 	Sqf::Value updateGroup(Sqf::Parameters params);
 	Sqf::Value updateGlobalCoins(Sqf::Parameters params);
+	Sqf::Value BEScriptScan(Sqf::Parameters params);
+
+	Sqf::Value VGQueryVeh(Sqf::Parameters params);
+	Sqf::Value VGSpawnVeh(Sqf::Parameters params);
+	Sqf::Value VGStoreVeh(Sqf::Parameters params);
 
 	Sqf::Value dataRequest(Sqf::Parameters params, bool async = false);
 	Sqf::Value dataStatus(Sqf::Parameters params);

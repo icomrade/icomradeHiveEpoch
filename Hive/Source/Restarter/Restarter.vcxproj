@@ -17,7 +17,7 @@
     <ProjectGuid>{11AFA4C2-C32F-467D-A7C5-D4B629068E2B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Restarter</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -54,7 +54,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>C:\HiveDeps\boost\lib\x86\v141\lib;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.15063.0\ucrt\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;C:\HiveDeps\boost\lib\x86\v141\lib;</LibraryPath>
+    <LibraryPath>C:\HiveDeps\boost\lib\x86\v141\lib;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.16299.0\ucrt\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;C:\HiveDeps\boost\lib\x86\v141\lib;</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -86,7 +86,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)$(UniversalCRT_IncludePath)C:\HiveDeps\boost;C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\ucrt</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)$(UniversalCRT_IncludePath)C:\HiveDeps\boost;C:\Program Files (x86)\Windows Kits\10\Include\10.0.16299.0\ucrt</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

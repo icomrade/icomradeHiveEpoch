@@ -73,15 +73,54 @@ namespace
 };
 
 #include <Poco/Util/AbstractConfiguration.h>
+/*
+SqlGarageDataSource::SqlGarageDataSource(Poco::Logger& logger, shared_ptr<Database> db, const Poco::Util::AbstractConfiguration* conf) : SqlDataSource(logger, db)
+{
+	static const string defaultGarageTable = "garage";
+	if (conf != NULL)
+	{
+		_garageTableName = getDB()->escape(conf->getString("Table", defaultGarageTable));
+		_cleanupStoredDays = conf->getInt("CleanupVehStoredDays", 35);
+	}
+	else
+	{
+		_garageTableName = defaultGarageTable;
+		_cleanupStoredDays = -1;
+	}
+	if (_cleanupStoredDays >= 0)
+	{
+		string CommonVGSQL = "FROM `" + _garageTableName + "` WHERE `DateStamp` < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL " + lexical_cast<string>(_cleanupStoredDays) + " DAY)";
+
+		int numToClean = 0;
+		{
+			auto numVehsToClean = getDB()->query(("SELECT COUNT(*) " + CommonVGSQL).c_str());
+			if (numVehsToClean && numVehsToClean->fetchRow())
+				numToClean = numVehsToClean->at(0).getInt32();
+		}
+		if (numToClean > 0)
+		{
+			_logger.information("Removing " + lexical_cast<string>(numToClean) + " placed objects older than " + lexical_cast<string>(_cleanupStoredDays) + " days");
+
+			auto stmt = getDB()->makeStatement(_stmtVGCleanupStored, "DELETE " + CommonVGSQL);
+			if (!stmt->directExecute())
+				_logger.error("Error executing placed objects cleanup statement");
+		}
+	}
+
+}
+*/
 SqlObjDataSource::SqlObjDataSource( Poco::Logger& logger, shared_ptr<Database> db, const Poco::Util::AbstractConfiguration* conf ) : SqlDataSource(logger,db)
 {
-	static const string defaultTable = "Object_DATA"; 
+	static const string defaultTable = "Object_DATA";
+	static const string defaultGarageTable = "garage";
 	if (conf != NULL)
 	{
 		_objTableName = getDB()->escape(conf->getString("Table",defaultTable));
 		_cleanupPlacedDays = conf->getInt("CleanupPlacedAfterDays",6);
 		_vehicleOOBReset = conf->getBool("ResetOOBVehicles",false);
 		_maintenanceObjs = conf->getString("MaintenanceObjects","'Land_DZE_GarageWoodDoorLocked','Land_DZE_LargeWoodDoorLocked','Land_DZE_WoodDoorLocked','CinderWallDoorLocked_DZ','CinderWallDoorSmallLocked_DZ','Plastic_Pole_EP1_DZ'");
+		_garageTableName = getDB()->escape(conf->getString("Table", defaultGarageTable));
+		_cleanupStoredDays = conf->getInt("CleanupVehStoredDays", 35);
 	}
 	else
 	{
@@ -89,6 +128,8 @@ SqlObjDataSource::SqlObjDataSource( Poco::Logger& logger, shared_ptr<Database> d
 		_cleanupPlacedDays = -1;
 		_vehicleOOBReset = false;
 		_maintenanceObjs = "'Land_DZE_GarageWoodDoorLocked','Land_DZE_LargeWoodDoorLocked','Land_DZE_WoodDoorLocked','CinderWallDoorLocked_DZ','CinderWallDoorSmallLocked_DZ','Plastic_Pole_EP1_DZ'";
+		_garageTableName = defaultGarageTable;
+		_cleanupStoredDays = -1;
 	}
 }
 
@@ -134,6 +175,28 @@ void SqlObjDataSource::populateObjects( int serverId, ServerObjectsQueue& queue 
 				_logger.error("Error executing placed objects cleanup statement");
 		}
 	}
+
+	//VG DATA CLEAN
+	if (_cleanupStoredDays >= 0)
+	{
+		string CommonVGSQL = "FROM `" + _garageTableName + "` WHERE `DateStamp` < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL " + lexical_cast<string>(_cleanupStoredDays) + " DAY)";
+
+		int numToClean = 0;
+		{
+			auto numVehsToClean = getDB()->query(("SELECT COUNT(*) " + CommonVGSQL).c_str());
+			if (numVehsToClean && numVehsToClean->fetchRow())
+				numToClean = numVehsToClean->at(0).getInt32();
+		}
+		if (numToClean > 0)
+		{
+			_logger.information("Removing " + lexical_cast<string>(numToClean) + " placed objects older than " + lexical_cast<string>(_cleanupStoredDays) + " days");
+
+			auto stmt = getDB()->makeStatement(_stmtVGCleanupStored, "DELETE " + CommonVGSQL);
+			if (!stmt->directExecute())
+				_logger.error("Error executing placed objects cleanup statement");
+		}
+	}
+	//END VG
 	
 	auto worldObjsRes = getDB()->queryParams("SELECT `ObjectID`, `Classname`, `CharacterID`, `Worldspace`, `Inventory`, `Hitpoints`, `Fuel`, `Damage`, `StorageCoins` FROM `%s` WHERE `Instance`=%d AND `Classname` IS NOT NULL AND `Damage` < 1", _objTableName.c_str(), serverId);
 	if (!worldObjsRes)
@@ -369,4 +432,101 @@ Sqf::Value SqlObjDataSource::fetchObjectId( int serverId, Int64 objectIdent )
 	}
 
 	return retVal;
+}
+
+//Virtual Garage Stuff
+
+bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored, const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2)
+{
+	//INSERT INTO garage (PlayerUID, Name, DisplayName, Classname, DateStored, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2) VALUES ('%1','%2','%3','%4','%5','%6','%7','%8','%9','%10','%11','%12')
+	unique_ptr<SqlStatement> vgupdatestmt;
+	vgupdatestmt = getDB()->makeStatement(_stmtVGStoreVeh,
+		"INSERT INTO `" + _garageTableName + "` (`PlayerUID`, `Name`, `DisplayName`, `Classname`, `Datestamp`, `DateStored`, `CharacterID`, `Inventory`, `Hitpoints`, `Fuel`, `Damage`, `Colour`, `Colour2`) "
+		"VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+	vgupdatestmt->addString(PlayerUID);
+	vgupdatestmt->addString(PlayerName);
+	vgupdatestmt->addString(DisplayName);
+	vgupdatestmt->addString(ClassName);
+	vgupdatestmt->addString(DateStored);
+	vgupdatestmt->addString(ObjCID);
+	vgupdatestmt->addString(lexical_cast<string>(inventory));
+	vgupdatestmt->addString(lexical_cast<string>(hitPoints));
+	vgupdatestmt->addDouble(fuel);
+	vgupdatestmt->addDouble(Damage);
+	vgupdatestmt->addString(Colour);
+	vgupdatestmt->addString(Colour2);
+	bool exRes = vgupdatestmt->execute();
+	poco_assert(exRes == true);
+
+	return exRes;
+
+}
+bool SqlObjDataSource::DeleteMyVGVeh(Int64 VehID)
+{
+	//"DELETE FROM garage WHERE ID='%1'", _id
+
+	unique_ptr<SqlStatement> vgdelstmt;
+	vgdelstmt = getDB()->makeStatement(_stmtVGDelVeh, "DELETE FROM `" + _garageTableName + "` WHERE `ID` = ?");
+
+	vgdelstmt->addInt64(VehID);
+
+	bool RetSTMT = vgdelstmt->execute();
+	poco_assert(RetSTMT == true);
+
+	return RetSTMT;
+}
+Sqf::Value SqlObjDataSource::GetMyVGVehs(const string& playerUID)
+{
+	//["SELECT id, classname, Inventory, CharacterID,DateStored FROM `%s` WHERE PlayerUID='%s' ORDER BY DisplayName",_playerUID];
+	Sqf::Parameters retVGGetVal;
+	auto VGRetMyVeh = getDB()->queryParams("SELECT id, classname, Inventory, CharacterID, DateStored FROM `%s` WHERE PlayerUID='%s' ORDER BY DisplayName", _garageTableName.c_str(), playerUID);
+	while (VGRetMyVeh->fetchRow())
+	{
+		Sqf::Parameters retVGGetValTemp;
+		auto row = VGRetMyVeh->fields();
+
+		retVGGetValTemp.push_back(row[0].getInt32());							 //int(11) ID
+		retVGGetValTemp.push_back(row[1].getString());							 //varchar classname
+		retVGGetValTemp.push_back(lexical_cast<Sqf::Value>(row[2].getString())); //varchar Inventory
+		retVGGetValTemp.push_back(row[3].getInt32());							 //bigint(20) unsigned CharacterID
+		retVGGetValTemp.push_back(row[4].getString());							 //timestamp DateStored
+		retVGGetVal.push_back(retVGGetValTemp);
+	}
+	return retVGGetVal;
+}
+
+Sqf::Parameters SqlObjDataSource::VgSelectSpawnVeh(const Sqf::Value& worldSpace, Int64 VehID, Int64 uniqueId)
+{
+	//["SELECT classname, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2 FROM garage WHERE ID='%1'",_id];
+	Sqf::Parameters myRetVal;
+	auto VGObjID = getDB()->queryParams("SELECT classname, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2 FROM `%s` WHERE ID='%d'", _garageTableName.c_str(), VehID);
+
+	if (VGObjID && VGObjID->fetchRow())
+	{
+		//get stuff from row
+		string classname = VGObjID->at(0).getString();
+		Int64 CharacterID = VGObjID->at(1).getInt64();
+		Sqf::Value Inventory = lexical_cast<Sqf::Value>(VGObjID->at(2).getString());
+		Sqf::Value hitPoints = lexical_cast<Sqf::Value>(VGObjID->at(3).getString());
+		double fuel = VGObjID->at(4).getDouble();
+		double damage = VGObjID->at(5).getDouble();
+		string colour = VGObjID->at(6).getString();
+		string colour2 = VGObjID->at(7).getString();
+
+		myRetVal.push_back(string("PASS"));
+		myRetVal.push_back(classname);
+		myRetVal.push_back(CharacterID);
+		myRetVal.push_back(Inventory);
+		myRetVal.push_back(hitPoints);
+		myRetVal.push_back(fuel);
+		myRetVal.push_back(damage);
+		myRetVal.push_back(colour);
+		myRetVal.push_back(colour2);
+	}
+	else
+	{
+		myRetVal.push_back(string("ERROR"));
+	}
+	return myRetVal;
 }
