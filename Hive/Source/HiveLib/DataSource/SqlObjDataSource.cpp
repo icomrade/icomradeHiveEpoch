@@ -436,13 +436,13 @@ Sqf::Value SqlObjDataSource::fetchObjectId( int serverId, Int64 objectIdent )
 
 //Virtual Garage Stuff
 
-bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored, const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2)
+bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored, const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey)
 {
 	//INSERT INTO garage (PlayerUID, Name, DisplayName, Classname, DateStored, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2) VALUES ('%1','%2','%3','%4','%5','%6','%7','%8','%9','%10','%11','%12')
 	unique_ptr<SqlStatement> vgupdatestmt;
 	vgupdatestmt = getDB()->makeStatement(_stmtVGStoreVeh,
-		"INSERT INTO `" + _garageTableName + "` (`PlayerUID`, `Name`, `DisplayName`, `Classname`, `Datestamp`, `DateStored`, `CharacterID`, `Inventory`, `Hitpoints`, `Fuel`, `Damage`, `Colour`, `Colour2`) "
-		"VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?)");
+		"INSERT INTO `" + _garageTableName + "` (`PlayerUID`, `Name`, `DisplayName`, `Classname`, `Datestamp`, `DateStored`, `CharacterID`, `Inventory`, `Hitpoints`, `Fuel`, `Damage`, `Colour`, `Colour2`, `serverKey`) "
+		"VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 	vgupdatestmt->addString(PlayerUID);
 	vgupdatestmt->addString(PlayerName);
@@ -456,6 +456,7 @@ bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& P
 	vgupdatestmt->addDouble(Damage);
 	vgupdatestmt->addString(Colour);
 	vgupdatestmt->addString(Colour2);
+	vgupdatestmt->addString(VGServerKey);
 	bool exRes = vgupdatestmt->execute();
 	poco_assert(exRes == true);
 
@@ -498,9 +499,9 @@ Sqf::Value SqlObjDataSource::GetMyVGVehs(const string& playerUID)
 
 Sqf::Parameters SqlObjDataSource::VgSelectSpawnVeh(const Sqf::Value& worldSpace, Int64 VehID, Int64 uniqueId)
 {
-	//["SELECT classname, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2 FROM garage WHERE ID='%1'",_id];
+	//"SELECT classname, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2, serverKey FROM garage WHERE ID='%1'"
 	Sqf::Parameters myRetVal;
-	auto VGObjID = getDB()->queryParams("SELECT classname, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2 FROM `%s` WHERE ID='%d'", _garageTableName.c_str(), VehID);
+	auto VGObjID = getDB()->queryParams("SELECT classname, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2, serverKey FROM `%s` WHERE ID='%d'", _garageTableName.c_str(), VehID);
 
 	if (VGObjID && VGObjID->fetchRow())
 	{
@@ -513,6 +514,7 @@ Sqf::Parameters SqlObjDataSource::VgSelectSpawnVeh(const Sqf::Value& worldSpace,
 		double damage = VGObjID->at(5).getDouble();
 		string colour = VGObjID->at(6).getString();
 		string colour2 = VGObjID->at(7).getString();
+		string VGServerKey = VGObjID->at(8).getString();
 
 		myRetVal.push_back(string("PASS"));
 		myRetVal.push_back(classname);
@@ -523,6 +525,7 @@ Sqf::Parameters SqlObjDataSource::VgSelectSpawnVeh(const Sqf::Value& worldSpace,
 		myRetVal.push_back(damage);
 		myRetVal.push_back(colour);
 		myRetVal.push_back(colour2);
+		myRetVal.push_back(VGServerKey);
 	}
 	else
 	{

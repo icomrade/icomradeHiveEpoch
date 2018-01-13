@@ -858,9 +858,9 @@ Sqf::Value HiveExtApp::VGSpawnVeh(Sqf::Parameters params)
 		Sqf::Value hitPoints = boost::get<Sqf::Parameters>(returnVal[4]);
 		double fuel = Sqf::GetDouble(returnVal[5]);
 		double damage = Sqf::GetDouble(returnVal[6]);
-		string colour = Sqf::GetStringAny(returnVal[7]);
-		string colour2 = Sqf::GetStringAny(returnVal[8]);
-
+		//string colour = Sqf::GetStringAny(returnVal[7]);
+		//string colour2 = Sqf::GetStringAny(returnVal[8]);
+		//string VGServerKey = Sqf::GetStringAny(returnVal[9]);
 		Sqf::Parameters myRet2 = ReturnBooleanStatus(_objData->createObject(getServerId(), classname, damage, CharacterID, worldSpace, Inventory, hitPoints, fuel, uniqueId));
 
 		if (boost::get<string>(myRet2[0]) == "PASS") {
@@ -893,6 +893,7 @@ Sqf::Value HiveExtApp::VGStoreVeh(Sqf::Parameters params)
 	double Damage = Sqf::GetDouble(params.at(8));
 	string Colour = Sqf::GetStringAny(params.at(9));
 	string Colour2 = Sqf::GetStringAny(params.at(10));
+	string VGServerKey = Sqf::GetStringAny(params.at(11));
 
 	boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
 	Int64 yr = timeLocal.date().year();
@@ -905,7 +906,7 @@ Sqf::Value HiveExtApp::VGStoreVeh(Sqf::Parameters params)
 	if (day < 10) daystr = "0" + daystr;
 	string DateStored = daystr + "-" + mnstr + "-" + yrstr;
 
-	return ReturnBooleanStatus(_objData->UpdateVGStoreVeh(PlayerUID, PlayerName, DisplayName, ClassName, DateStored, ObjCID, inventory, hitPoints, fuel, Damage, Colour, Colour2));
+	return ReturnBooleanStatus(_objData->UpdateVGStoreVeh(PlayerUID, PlayerName, DisplayName, ClassName, DateStored, ObjCID, inventory, hitPoints, fuel, Damage, Colour, Colour2, VGServerKey));
 }
 
 namespace

@@ -3,3 +3,6 @@
 *.opensdf
 *.aps
 *.db
+*.opendb
+*.db-shm
+*.db-wal
