@@ -733,12 +733,18 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 		if (hr < 1) {
 			hrstrmn = "23";
 		}
+		else {
+			hrstrmn = std::to_string(hr - 1);
+		}
 	}
 	else if (min == 59)
 	{
 		minstrmx = "00";
 		if (hr == 23) {
 			hrstrmx = "00";
+		}
+		else {
+			hrstrmx = std::to_string(hr + 1);
 		}
 	}
 	//Int32 sec = timeLocal.time_of_day().seconds();
@@ -801,7 +807,7 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 					{
 						//if time +/- 1 and string found player is legit
 						match = true;
-						logger().notice("Successfully found player in scripts.log with log text: '" + checkLine + "'");
+						logger().notice("Successfully found player in scripts.log, compared to (Time min) -- (actual) -- (max): (" + dateTimeMin + ") -- (" + dateTimeActual + ") -- (" + dateTimeMax + ") with log text: '" + checkLine + "'");
 						break;
 					}
 					else {
