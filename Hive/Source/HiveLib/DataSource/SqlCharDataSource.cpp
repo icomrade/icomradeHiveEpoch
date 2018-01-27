@@ -51,7 +51,7 @@ Sqf::Value SqlCharDataSource::fetchCharacterInitial( string playerId, int server
 				stmt->addString(playerId);
 				bool exRes = stmt->execute();
 				poco_assert(exRes == true);
-				_logger.information("Changed name of player " + playerId + " from '" + playerRes->at(0).getString() + "' to '" + playerName + "'");
+				_logger.notice("Changed name of player " + playerId + " from '" + playerRes->at(0).getString() + "' to '" + playerName + "'");
 			}
 			playerGroup = lexical_cast<Sqf::Value>(playerRes->at(2).getString());
 			playerCoins = playerRes->at(3).getInt64();

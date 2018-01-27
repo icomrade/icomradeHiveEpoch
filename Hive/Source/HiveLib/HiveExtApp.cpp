@@ -721,7 +721,6 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 
 	Int64 hr = timeLocal.time_of_day().hours();
 	string hrstra = std::to_string(hr);
-	if (hr < 10) hrstra = "0" + hrstra;
 	string hrstrmn = hrstra;
 	string hrstrmx = hrstra;
 
@@ -729,31 +728,13 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 	string minstra = std::to_string(min);
 	string minstrmn = std::to_string(min - 1);
 	string minstrmx = std::to_string(min + 1);
-	if (min < 10) {
-		minstra = "0" + minstra;
-		if (min < 9) {
-			minstrmx = "0" + std::to_string(min + 1); 
-			if (min < 1) {
-				minstrmn = "59";
-				if (hr < 1) {
-					hrstrmn = "23";
-				}
-				else if (hr <= 10) {
-					hrstrmn = "0" + std::to_string(hr - 1);
-				}
-				else {
-					hrstrmn = std::to_string(hr - 1);
-				}
-			}
-			else {
-				minstrmn = "0" + std::to_string(min - 1);
-			}
-		}
-		else {
-			minstrmx = std::to_string(min + 1);
+	if (min < 1) {
+		minstrmn = "59";
+		if (hr < 1) {
+			hrstrmn = "23";
 		}
 	}
-	else if (min == 59) 
+	else if (min == 59)
 	{
 		minstrmx = "00";
 		if (hr == 23) {
@@ -761,7 +742,14 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 		}
 	}
 	//Int32 sec = timeLocal.time_of_day().seconds();
-	
+	if (hrstrmn.length() < 2) hrstrmn = "0" + hrstrmn;
+	if (hrstra.length() < 2) hrstra = "0" + hrstra;
+	if (hrstrmx.length() < 2) hrstrmx = "0" + hrstrmx;
+
+	if (minstrmn.length() < 2) minstrmn = "0" + minstrmn;
+	if (minstra.length() < 2) minstra = "0" + minstra;
+	if (minstrmx.length() < 2) minstrmx = "0" + minstrmx;
+
 	string dateTimeMin = hrstrmn + ":" + minstrmn + ":";
 	string dateTimeActual = hrstra + ":" + minstra + ":";
 	string dateTimeMax = hrstrmx + ":" + minstrmx + ":";
@@ -813,7 +801,7 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 					{
 						//if time +/- 1 and string found player is legit
 						match = true;
-						logger().notice("Succesfully found player in scripts.log with log text: '" + checkLine + "'");
+						logger().notice("Successfully found player in scripts.log with log text: '" + checkLine + "'");
 						break;
 					}
 					else {
