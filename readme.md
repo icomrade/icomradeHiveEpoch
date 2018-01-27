@@ -14,9 +14,10 @@
   1. open up your visual studio command prompt
   2. ```CD C:\HiveDeps\boost```
   3. ```bootstrap.bat```
-  4. ```b2.exe toolset=msvc-14.0 --build-type=complete variant=release,debug runtime-link=shared,static link=static threading=multi address-model=32 --without-log --stagedir=lib\x86\v141 --build-dir=out\x86\v141```
-	  * NOTE: boost 1.63 has no build out of the box for VS2017, you must edit project-config.jam
-	  ```using msvc ;``` -----> ```using msvc : 14.0 : "c:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.10.24728\bin\HostX64\x64\cl.exe";```
+  4. ```b2.exe toolset=msvc-14.1 --build-type=complete variant=release,debug runtime-link=shared,static link=static threading=multi address-model=32 --without-log --stagedir=lib\x86\v141 --build-dir=out\x86\v141```
+	  * NOTE: boost 1.66 has no build out of the box for VS2017, you must edit project-config.jam
+	  ```using msvc ;``` -----> ```using msvc : 14.1 : "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.12.25827\bin\Hostx64\x64\cl.exe";```
+	  * NOTE: if the boost build produces libs with VC140 you will need to rename them to your compiler version for VC140 -> VC141 run the following in the command prompt (CD to the lib dir) https://pastebin.com/Gp5gPTLa
 
 #### Building POCO
 1. Download Poco here (We use 1.7.8): https://pocoproject.org/download/index.html and extract files to C:\HiveDeps\poco

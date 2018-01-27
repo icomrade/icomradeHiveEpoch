@@ -436,32 +436,44 @@ Sqf::Value SqlObjDataSource::fetchObjectId( int serverId, Int64 objectIdent )
 
 //Virtual Garage Stuff
 
-bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored, const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey)
+bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored, const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey, const string& ObjUID)
 {
 	//INSERT INTO garage (PlayerUID, Name, DisplayName, Classname, DateStored, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2) VALUES ('%1','%2','%3','%4','%5','%6','%7','%8','%9','%10','%11','%12')
-	unique_ptr<SqlStatement> vgupdatestmt;
-	vgupdatestmt = getDB()->makeStatement(_stmtVGStoreVeh,
-		"INSERT INTO `" + _garageTableName + "` (`PlayerUID`, `Name`, `DisplayName`, `Classname`, `Datestamp`, `DateStored`, `CharacterID`, `Inventory`, `Hitpoints`, `Fuel`, `Damage`, `Colour`, `Colour2`, `serverKey`) "
-		"VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+	//select count(*) FROM `" + _garageTableName + "` WHERE `serverKey` = " + VGServerKey + " `ObjUID` = " + ObjUID)
+	Sqf::Parameters myRetVal;
+	bool exRes = false;
+	auto VGDupliateCheck = getDB()->query((_stmtVGDupliateCheck, "select count(*) FROM `" + _garageTableName + "` WHERE `serverKey` = '" + VGServerKey + "' AND `ObjUID` = '" + ObjUID + "'").c_str());
 
-	vgupdatestmt->addString(PlayerUID);
-	vgupdatestmt->addString(PlayerName);
-	vgupdatestmt->addString(DisplayName);
-	vgupdatestmt->addString(ClassName);
-	vgupdatestmt->addString(DateStored);
-	vgupdatestmt->addString(ObjCID);
-	vgupdatestmt->addString(lexical_cast<string>(inventory));
-	vgupdatestmt->addString(lexical_cast<string>(hitPoints));
-	vgupdatestmt->addDouble(fuel);
-	vgupdatestmt->addDouble(Damage);
-	vgupdatestmt->addString(Colour);
-	vgupdatestmt->addString(Colour2);
-	vgupdatestmt->addString(VGServerKey);
-	bool exRes = vgupdatestmt->execute();
-	poco_assert(exRes == true);
+	if (VGDupliateCheck && VGDupliateCheck->fetchRow())
+	{
+		if (VGDupliateCheck->at(0).getInt32() < 1) {
+			unique_ptr<SqlStatement> vgupdatestmt;
+			vgupdatestmt = getDB()->makeStatement(_stmtVGStoreVeh,
+				"INSERT INTO `" + _garageTableName + "` (`PlayerUID`, `Name`, `DisplayName`, `Classname`, `Datestamp`, `DateStored`, `CharacterID`, `Inventory`, `Hitpoints`, `Fuel`, `Damage`, `Colour`, `Colour2`, `serverKey`, `ObjUID`) "
+				"VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
+			vgupdatestmt->addString(PlayerUID);
+			vgupdatestmt->addString(PlayerName);
+			vgupdatestmt->addString(DisplayName);
+			vgupdatestmt->addString(ClassName);
+			vgupdatestmt->addString(DateStored);
+			vgupdatestmt->addString(ObjCID);
+			vgupdatestmt->addString(lexical_cast<string>(inventory));
+			vgupdatestmt->addString(lexical_cast<string>(hitPoints));
+			vgupdatestmt->addDouble(fuel);
+			vgupdatestmt->addDouble(Damage);
+			vgupdatestmt->addString(Colour);
+			vgupdatestmt->addString(Colour2);
+			vgupdatestmt->addString(VGServerKey);
+			vgupdatestmt->addString(ObjUID);
+			exRes = vgupdatestmt->execute();
+			poco_assert(exRes == true);
+		}
+		else {
+			_logger.error("Duplicate object NOT stored in virtual garage. storage attempt by player with UID: " + PlayerUID + " ObjectID: " + ObjUID + " VG_ServerKey: " + VGServerKey);
+		}
+	}
 	return exRes;
-
 }
 bool SqlObjDataSource::DeleteMyVGVeh(Int64 VehID)
 {
@@ -501,7 +513,7 @@ Sqf::Parameters SqlObjDataSource::VgSelectSpawnVeh(const Sqf::Value& worldSpace,
 {
 	//"SELECT classname, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2, serverKey FROM garage WHERE ID='%1'"
 	Sqf::Parameters myRetVal;
-	auto VGObjID = getDB()->queryParams("SELECT classname, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2, serverKey FROM `%s` WHERE ID='%d'", _garageTableName.c_str(), VehID);
+	auto VGObjID = getDB()->queryParams("SELECT classname, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2, serverKey, ObjUID FROM `%s` WHERE ID='%d'", _garageTableName.c_str(), VehID);
 
 	if (VGObjID && VGObjID->fetchRow())
 	{
@@ -515,6 +527,7 @@ Sqf::Parameters SqlObjDataSource::VgSelectSpawnVeh(const Sqf::Value& worldSpace,
 		string colour = VGObjID->at(6).getString();
 		string colour2 = VGObjID->at(7).getString();
 		string VGServerKey = VGObjID->at(8).getString();
+		string VG_ObjectID = VGObjID->at(9).getString();
 
 		myRetVal.push_back(string("PASS"));
 		myRetVal.push_back(classname);
@@ -526,6 +539,7 @@ Sqf::Parameters SqlObjDataSource::VgSelectSpawnVeh(const Sqf::Value& worldSpace,
 		myRetVal.push_back(colour);
 		myRetVal.push_back(colour2);
 		myRetVal.push_back(VGServerKey);
+		myRetVal.push_back(VG_ObjectID);
 	}
 	else
 	{

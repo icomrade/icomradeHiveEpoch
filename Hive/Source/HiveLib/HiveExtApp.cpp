@@ -817,11 +817,11 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 						break;
 					}
 					else {
-						logger().debug("Time min, actual, and max:" + dateTimeMin + " -- " + dateTimeActual + " -- " + dateTimeMax + " -- " + " Not found compared to string:  " + checkLine);
+						logger().notice("Time min -- actual -- max: " + dateTimeMin + " -- " + dateTimeActual + " -- " + dateTimeMax + " -- " + " Not found compared to string: " + checkLine);
 					}
 				}
 				else {
-					logger().debug("Could not find 'ScriptsLogLine' " + StringScan + "for player with GUID: " + BEGUID);
+					logger().notice("Line does not match provided 'ScriptsLogLine' " + StringScan + "for player with GUID: " + BEGUID);
 				}
 				logLines.pop_back();
 			}
@@ -861,6 +861,8 @@ Sqf::Value HiveExtApp::VGSpawnVeh(Sqf::Parameters params)
 		//string colour = Sqf::GetStringAny(returnVal[7]);
 		//string colour2 = Sqf::GetStringAny(returnVal[8]);
 		//string VGServerKey = Sqf::GetStringAny(returnVal[9]);
+		//string VG_ObjectID = Sqf::GetStringAny(returnVal[10]);
+
 		Sqf::Parameters myRet2 = ReturnBooleanStatus(_objData->createObject(getServerId(), classname, damage, CharacterID, worldSpace, Inventory, hitPoints, fuel, uniqueId));
 
 		if (boost::get<string>(myRet2[0]) == "PASS") {
@@ -894,6 +896,7 @@ Sqf::Value HiveExtApp::VGStoreVeh(Sqf::Parameters params)
 	string Colour = Sqf::GetStringAny(params.at(9));
 	string Colour2 = Sqf::GetStringAny(params.at(10));
 	string VGServerKey = Sqf::GetStringAny(params.at(11));
+	string ObjUID = Sqf::GetStringAny(params.at(12));
 
 	boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
 	Int64 yr = timeLocal.date().year();
@@ -906,7 +909,7 @@ Sqf::Value HiveExtApp::VGStoreVeh(Sqf::Parameters params)
 	if (day < 10) daystr = "0" + daystr;
 	string DateStored = daystr + "-" + mnstr + "-" + yrstr;
 
-	return ReturnBooleanStatus(_objData->UpdateVGStoreVeh(PlayerUID, PlayerName, DisplayName, ClassName, DateStored, ObjCID, inventory, hitPoints, fuel, Damage, Colour, Colour2, VGServerKey));
+	return ReturnBooleanStatus(_objData->UpdateVGStoreVeh(PlayerUID, PlayerName, DisplayName, ClassName, DateStored, ObjCID, inventory, hitPoints, fuel, Damage, Colour, Colour2, VGServerKey, ObjUID));
 }
 
 namespace

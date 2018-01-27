@@ -44,7 +44,7 @@ public:
 	Sqf::Value fetchObjectId( int serverId, Int64 objectIdent ) override;
 	//VG
 	bool UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored,
-		const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey) override;
+		const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey, const string& ObjUID) override;
 
 	Sqf::Parameters VgSelectSpawnVeh(const Sqf::Value& worldSpace, Int64 VehID, Int64 uniqueId) override;
 	bool DeleteMyVGVeh(Int64 VehID) override;
@@ -74,6 +74,7 @@ private:
 	SqlStatementID _stmtVGStoreVeh;
 	SqlStatementID _stmtVGDelVeh;
 	SqlStatementID _stmtVGCleanupStored;
+	SqlStatementID _stmtVGDupliateCheck;
 }; 
 /*
 class SqlGarageDataSource : public SqlDataSource, public GarageDataSource
@@ -83,7 +84,7 @@ public:
 	~SqlGarageDataSource() {}
 
 	bool UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored,
-		const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey) override;
+		const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey, const string& ObjUID) override;
 
 	Sqf::Parameters VgSelectSpawnVeh(const Sqf::Value& worldSpace, const string& VehID, Int64 uniqueId) override;
 	bool DeleteMyVGVeh(const string& VehID) override;
