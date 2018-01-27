@@ -828,7 +828,7 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 			}
 		}
 	}
-	return match;
+	return ReturnBooleanStatus(match);
 }
 
 Sqf::Value HiveExtApp::VGQueryVeh(Sqf::Parameters params)
