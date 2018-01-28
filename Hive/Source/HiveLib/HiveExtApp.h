@@ -106,6 +106,7 @@ private:
 	Sqf::Value VGQueryVeh(Sqf::Parameters params);
 	Sqf::Value VGSpawnVeh(Sqf::Parameters params);
 	Sqf::Value VGStoreVeh(Sqf::Parameters params);
+	Sqf::Value VGMaintainVeh(Sqf::Parameters params);
 
 	Sqf::Value dataRequest(Sqf::Parameters params, bool async = false);
 	Sqf::Value dataStatus(Sqf::Parameters params);

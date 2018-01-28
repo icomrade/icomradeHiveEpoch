@@ -42,7 +42,8 @@ public:
 		const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey, const string& ObjUID, const Sqf::Value& inventoryCount) = 0;
 	virtual Sqf::Parameters VgSelectSpawnVeh(const Sqf::Value& worldSpace, Int64 VehID, Int64 uniqueId) = 0;
 	virtual bool DeleteMyVGVeh(Int64 VehID) = 0;
-	virtual Sqf::Value GetMyVGVehs(const string& playerUID) = 0;
+	virtual Sqf::Value GetMyVGVehs(const string& playerUID, const string& sortColumn) = 0;
+	virtual bool MaintainMyVGVeh(const string& PlayerUID) = 0;
 }; 
 /*
 class GarageDataSource

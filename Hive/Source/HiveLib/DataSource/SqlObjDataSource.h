@@ -48,7 +48,8 @@ public:
 
 	Sqf::Parameters VgSelectSpawnVeh(const Sqf::Value& worldSpace, Int64 VehID, Int64 uniqueId) override;
 	bool DeleteMyVGVeh(Int64 VehID) override;
-	Sqf::Value GetMyVGVehs(const string& playerUID) override;
+	Sqf::Value GetMyVGVehs(const string& playerUID, const string& sortColumn) override;
+	bool MaintainMyVGVeh(const string& PlayerUID) override;
 private:
 	string _objTableName;
 	int _cleanupPlacedDays;
@@ -75,6 +76,7 @@ private:
 	SqlStatementID _stmtVGDelVeh;
 	SqlStatementID _stmtVGCleanupStored;
 	SqlStatementID _stmtVGDupliateCheck;
+	SqlStatementID _stmtVGMaintainVeh;
 }; 
 /*
 class SqlGarageDataSource : public SqlDataSource, public GarageDataSource

@@ -179,7 +179,7 @@ void SqlObjDataSource::populateObjects( int serverId, ServerObjectsQueue& queue 
 	//VG DATA CLEAN
 	if (_cleanupStoredDays >= 0)
 	{
-		string CommonVGSQL = "FROM `" + _garageTableName + "` WHERE `DateStamp` < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL " + lexical_cast<string>(_cleanupStoredDays) + " DAY)";
+		string CommonVGSQL = "FROM `" + _garageTableName + "` WHERE `DateMaintained` < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL " + lexical_cast<string>(_cleanupStoredDays) + " DAY)";
 
 		int numToClean = 0;
 		{
@@ -449,8 +449,8 @@ bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& P
 		if (VGDupliateCheck->at(0).getInt32() < 1) {
 			unique_ptr<SqlStatement> vgupdatestmt;
 			vgupdatestmt = getDB()->makeStatement(_stmtVGStoreVeh,
-				"INSERT INTO `" + _garageTableName + "` (`PlayerUID`, `Name`, `DisplayName`, `Classname`, `Datestamp`, `DateStored`, `CharacterID`, StorageCounts, `Inventory`, `Hitpoints`, `Fuel`, `Damage`, `Colour`, `Colour2`, `serverKey`, `ObjUID`) "
-				"VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+				"INSERT INTO `" + _garageTableName + "` (`PlayerUID`, `Name`, `DisplayName`, `Classname`, `Datestamp`, `DateStored`, `DateMaintained`, `CharacterID`, StorageCounts, `Inventory`, `Hitpoints`, `Fuel`, `Damage`, `Colour`, `Colour2`, `serverKey`, `ObjUID`) "
+				"VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 			vgupdatestmt->addString(PlayerUID);
 			vgupdatestmt->addString(PlayerName);
@@ -476,6 +476,7 @@ bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& P
 	}
 	return exRes;
 }
+
 bool SqlObjDataSource::DeleteMyVGVeh(Int64 VehID)
 {
 	//"DELETE FROM garage WHERE ID='%1'", _id
@@ -490,11 +491,13 @@ bool SqlObjDataSource::DeleteMyVGVeh(Int64 VehID)
 
 	return RetSTMT;
 }
-Sqf::Value SqlObjDataSource::GetMyVGVehs(const string& playerUID)
+
+Sqf::Value SqlObjDataSource::GetMyVGVehs(const string& playerUID, const string& sortColumn)
 {
 	//["SELECT id, classname, Inventory, CharacterID,DateStored FROM `%s` WHERE PlayerUID='%s' ORDER BY DisplayName",_playerUID];
 	Sqf::Parameters retVGGetVal;
-	auto VGRetMyVeh = getDB()->queryParams("SELECT id, classname, StorageCounts, CharacterID, DateStored FROM `%s` WHERE PlayerUID='%s' ORDER BY DisplayName", _garageTableName.c_str(), playerUID);
+
+	auto VGRetMyVeh = getDB()->queryParams(("SELECT id, classname, StorageCounts, CharacterID, DateStored, DateMaintained FROM `" + _garageTableName + "` WHERE PlayerUID = '" + playerUID + "' ORDER BY `" + sortColumn + "`").c_str());
 	while (VGRetMyVeh->fetchRow())
 	{
 		Sqf::Parameters retVGGetValTemp;
@@ -504,7 +507,10 @@ Sqf::Value SqlObjDataSource::GetMyVGVehs(const string& playerUID)
 		retVGGetValTemp.push_back(row[1].getString());							 //varchar classname
 		retVGGetValTemp.push_back(lexical_cast<Sqf::Value>(row[2].getString())); //varchar StorageCounts
 		retVGGetValTemp.push_back(row[3].getInt32());							 //bigint(20) unsigned CharacterID
-		retVGGetValTemp.push_back(row[4].getString());							 //timestamp DateStored
+		retVGGetValTemp.push_back(row[4].getString());							 //varchar DateStored
+		retVGGetValTemp.push_back(row[5].getString());							 //timestamp DateMaintained
+		retVGGetValTemp.push_back(_cleanupStoredDays);
+
 		retVGGetVal.push_back(retVGGetValTemp);
 	}
 	return retVGGetVal;
@@ -547,4 +553,17 @@ Sqf::Parameters SqlObjDataSource::VgSelectSpawnVeh(const Sqf::Value& worldSpace,
 		myRetVal.push_back(string("ERROR"));
 	}
 	return myRetVal;
+}
+
+bool SqlObjDataSource::MaintainMyVGVeh(const string& PlayerUID)
+{
+	unique_ptr<SqlStatement> vgmaintainstmt;
+	vgmaintainstmt = getDB()->makeStatement(_stmtVGMaintainVeh, "UPDATE `" + _garageTableName + "` SET `DateMaintained` = CURRENT_TIMESTAMP WHERE `PlayerUID` = ?");
+
+	vgmaintainstmt->addString(PlayerUID);
+
+	bool STMTExec = vgmaintainstmt->execute();
+	poco_assert(STMTExec == true);
+
+	return STMTExec;
 }

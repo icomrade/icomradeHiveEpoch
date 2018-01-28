@@ -162,6 +162,7 @@ HiveExtApp::HiveExtApp(string suffixDir) : AppServer("HiveExt",suffixDir), _serv
 	handlers[800] = boost::bind(&HiveExtApp::VGQueryVeh, this, _1);
 	handlers[801] = boost::bind(&HiveExtApp::VGSpawnVeh, this, _1);
 	handlers[802] = boost::bind(&HiveExtApp::VGStoreVeh, this, _1);
+	handlers[803] = boost::bind(&HiveExtApp::VGMaintainVeh, this, _1);
 }
 
 #include <boost/lexical_cast.hpp>
@@ -834,7 +835,14 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 Sqf::Value HiveExtApp::VGQueryVeh(Sqf::Parameters params)
 {
 	string playerUID = Sqf::GetStringAny(params.at(0));
-	return _objData->GetMyVGVehs(playerUID);
+	string sortColumn = "DisplayName";
+	switch (Sqf::GetIntAny(params.at(1))) {
+		case 1: sortColumn = "DateStored";
+		case 2: sortColumn = "id";
+		case 3: sortColumn = "Name";
+		case 4: sortColumn = "DateMaintained";
+	}
+	return _objData->GetMyVGVehs(playerUID, sortColumn);
 }
 
 Sqf::Value HiveExtApp::VGSpawnVeh(Sqf::Parameters params)
@@ -905,6 +913,12 @@ Sqf::Value HiveExtApp::VGStoreVeh(Sqf::Parameters params)
 	string DateStored = daystr + "-" + mnstr + "-" + yrstr;
 
 	return ReturnBooleanStatus(_objData->UpdateVGStoreVeh(PlayerUID, PlayerName, DisplayName, ClassName, DateStored, ObjCID, inventory, hitPoints, fuel, Damage, Colour, Colour2, VGServerKey, ObjUID, inventoryCount));
+}
+
+Sqf::Value HiveExtApp::VGMaintainVeh(Sqf::Parameters params)
+{
+	string PlayerUID = Sqf::GetStringAny(params.at(0));
+	return ReturnBooleanStatus(_objData->MaintainMyVGVeh(PlayerUID));
 }
 
 namespace
