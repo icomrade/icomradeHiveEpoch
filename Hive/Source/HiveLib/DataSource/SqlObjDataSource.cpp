@@ -436,7 +436,7 @@ Sqf::Value SqlObjDataSource::fetchObjectId( int serverId, Int64 objectIdent )
 
 //Virtual Garage Stuff
 
-bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored, const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey, const string& ObjUID)
+bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored, const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey, const string& ObjUID, const Sqf::Value& inventoryCount)
 {
 	//INSERT INTO garage (PlayerUID, Name, DisplayName, Classname, DateStored, CharacterID, Inventory, Hitpoints, Fuel, Damage, Colour, Colour2) VALUES ('%1','%2','%3','%4','%5','%6','%7','%8','%9','%10','%11','%12')
 	//select count(*) FROM `" + _garageTableName + "` WHERE `serverKey` = " + VGServerKey + " `ObjUID` = " + ObjUID)
@@ -449,8 +449,8 @@ bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& P
 		if (VGDupliateCheck->at(0).getInt32() < 1) {
 			unique_ptr<SqlStatement> vgupdatestmt;
 			vgupdatestmt = getDB()->makeStatement(_stmtVGStoreVeh,
-				"INSERT INTO `" + _garageTableName + "` (`PlayerUID`, `Name`, `DisplayName`, `Classname`, `Datestamp`, `DateStored`, `CharacterID`, `Inventory`, `Hitpoints`, `Fuel`, `Damage`, `Colour`, `Colour2`, `serverKey`, `ObjUID`) "
-				"VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+				"INSERT INTO `" + _garageTableName + "` (`PlayerUID`, `Name`, `DisplayName`, `Classname`, `Datestamp`, `DateStored`, `CharacterID`, StorageCounts, `Inventory`, `Hitpoints`, `Fuel`, `Damage`, `Colour`, `Colour2`, `serverKey`, `ObjUID`) "
+				"VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 			vgupdatestmt->addString(PlayerUID);
 			vgupdatestmt->addString(PlayerName);
@@ -458,6 +458,7 @@ bool SqlObjDataSource::UpdateVGStoreVeh(const string& PlayerUID, const string& P
 			vgupdatestmt->addString(ClassName);
 			vgupdatestmt->addString(DateStored);
 			vgupdatestmt->addString(ObjCID);
+			vgupdatestmt->addString(lexical_cast<string>(inventoryCount));
 			vgupdatestmt->addString(lexical_cast<string>(inventory));
 			vgupdatestmt->addString(lexical_cast<string>(hitPoints));
 			vgupdatestmt->addDouble(fuel);
@@ -493,7 +494,7 @@ Sqf::Value SqlObjDataSource::GetMyVGVehs(const string& playerUID)
 {
 	//["SELECT id, classname, Inventory, CharacterID,DateStored FROM `%s` WHERE PlayerUID='%s' ORDER BY DisplayName",_playerUID];
 	Sqf::Parameters retVGGetVal;
-	auto VGRetMyVeh = getDB()->queryParams("SELECT id, classname, Inventory, CharacterID, DateStored FROM `%s` WHERE PlayerUID='%s' ORDER BY DisplayName", _garageTableName.c_str(), playerUID);
+	auto VGRetMyVeh = getDB()->queryParams("SELECT id, classname, StorageCounts, CharacterID, DateStored FROM `%s` WHERE PlayerUID='%s' ORDER BY DisplayName", _garageTableName.c_str(), playerUID);
 	while (VGRetMyVeh->fetchRow())
 	{
 		Sqf::Parameters retVGGetValTemp;
@@ -501,7 +502,7 @@ Sqf::Value SqlObjDataSource::GetMyVGVehs(const string& playerUID)
 
 		retVGGetValTemp.push_back(row[0].getInt32());							 //int(11) ID
 		retVGGetValTemp.push_back(row[1].getString());							 //varchar classname
-		retVGGetValTemp.push_back(lexical_cast<Sqf::Value>(row[2].getString())); //varchar Inventory
+		retVGGetValTemp.push_back(lexical_cast<Sqf::Value>(row[2].getString())); //varchar StorageCounts
 		retVGGetValTemp.push_back(row[3].getInt32());							 //bigint(20) unsigned CharacterID
 		retVGGetValTemp.push_back(row[4].getString());							 //timestamp DateStored
 		retVGGetVal.push_back(retVGGetValTemp);

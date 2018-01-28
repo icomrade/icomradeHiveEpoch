@@ -891,6 +891,7 @@ Sqf::Value HiveExtApp::VGStoreVeh(Sqf::Parameters params)
 	string Colour2 = Sqf::GetStringAny(params.at(10));
 	string VGServerKey = Sqf::GetStringAny(params.at(11));
 	string ObjUID = Sqf::GetStringAny(params.at(12));
+	Sqf::Value inventoryCount = boost::get<Sqf::Parameters>(params.at(13));
 
 	boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
 	Int64 yr = timeLocal.date().year();
@@ -903,7 +904,7 @@ Sqf::Value HiveExtApp::VGStoreVeh(Sqf::Parameters params)
 	if (day < 10) daystr = "0" + daystr;
 	string DateStored = daystr + "-" + mnstr + "-" + yrstr;
 
-	return ReturnBooleanStatus(_objData->UpdateVGStoreVeh(PlayerUID, PlayerName, DisplayName, ClassName, DateStored, ObjCID, inventory, hitPoints, fuel, Damage, Colour, Colour2, VGServerKey, ObjUID));
+	return ReturnBooleanStatus(_objData->UpdateVGStoreVeh(PlayerUID, PlayerName, DisplayName, ClassName, DateStored, ObjCID, inventory, hitPoints, fuel, Damage, Colour, Colour2, VGServerKey, ObjUID, inventoryCount));
 }
 
 namespace

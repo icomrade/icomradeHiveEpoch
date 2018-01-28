@@ -43,8 +43,8 @@ public:
 		const Sqf::Value& worldSpace, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, Int64 uniqueId ) override;
 	Sqf::Value fetchObjectId( int serverId, Int64 objectIdent ) override;
 	//VG
-	bool UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored,
-		const string& ObjCID, const Sqf::Value& inventory, const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey, const string& ObjUID) override;
+	bool UpdateVGStoreVeh(const string& PlayerUID, const string& PlayerName, const string& DisplayName, const string& ClassName, const string& DateStored, const string& ObjCID, const Sqf::Value& inventory, 
+		const Sqf::Value& hitPoints, double fuel, double Damage, const string& Colour, const string& Colour2, const string& VGServerKey, const string& ObjUID, const Sqf::Value& inventoryCount) override;
 
 	Sqf::Parameters VgSelectSpawnVeh(const Sqf::Value& worldSpace, Int64 VehID, Int64 uniqueId) override;
 	bool DeleteMyVGVeh(Int64 VehID) override;
