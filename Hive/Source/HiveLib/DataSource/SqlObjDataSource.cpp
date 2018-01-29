@@ -119,7 +119,7 @@ SqlObjDataSource::SqlObjDataSource( Poco::Logger& logger, shared_ptr<Database> d
 		_cleanupPlacedDays = conf->getInt("CleanupPlacedAfterDays",6);
 		_vehicleOOBReset = conf->getBool("ResetOOBVehicles",false);
 		_maintenanceObjs = conf->getString("MaintenanceObjects","'Land_DZE_GarageWoodDoorLocked','Land_DZE_LargeWoodDoorLocked','Land_DZE_WoodDoorLocked','CinderWallDoorLocked_DZ','CinderWallDoorSmallLocked_DZ','Plastic_Pole_EP1_DZ'");
-		_garageTableName = getDB()->escape(conf->getString("Table", defaultGarageTable));
+		_garageTableName = getDB()->escape(conf->getString("VGTable", defaultGarageTable));
 		_cleanupStoredDays = conf->getInt("CleanupVehStoredDays", 35);
 	}
 	else
