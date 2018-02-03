@@ -121,6 +121,7 @@ SqlObjDataSource::SqlObjDataSource( Poco::Logger& logger, shared_ptr<Database> d
 		_maintenanceObjs = conf->getString("MaintenanceObjects","'Land_DZE_GarageWoodDoorLocked','Land_DZE_LargeWoodDoorLocked','Land_DZE_WoodDoorLocked','CinderWallDoorLocked_DZ','CinderWallDoorSmallLocked_DZ','Plastic_Pole_EP1_DZ'");
 		_garageTableName = getDB()->escape(conf->getString("VGTable", defaultGarageTable));
 		_cleanupStoredDays = conf->getInt("CleanupVehStoredDays", 35);
+		_logObjCleanup = conf->getBool("LogObjectCleanup", false);
 	}
 	else
 	{
@@ -130,6 +131,7 @@ SqlObjDataSource::SqlObjDataSource( Poco::Logger& logger, shared_ptr<Database> d
 		_maintenanceObjs = "'Land_DZE_GarageWoodDoorLocked','Land_DZE_LargeWoodDoorLocked','Land_DZE_WoodDoorLocked','CinderWallDoorLocked_DZ','CinderWallDoorSmallLocked_DZ','Plastic_Pole_EP1_DZ'";
 		_garageTableName = defaultGarageTable;
 		_cleanupStoredDays = -1;
+		_logObjCleanup = false;
 	}
 }
 
@@ -168,8 +170,15 @@ void SqlObjDataSource::populateObjects( int serverId, ServerObjectsQueue& queue 
 		}
 		if (numCleaned > 0)
 		{
-			_logger.information("Removing " + lexical_cast<string>(numCleaned) + " placed objects older than " + lexical_cast<string>(_cleanupPlacedDays) + " days");
-
+			_logger.notice("Removing " + lexical_cast<string>(numCleaned) + " placed objects older than " + lexical_cast<string>(_cleanupPlacedDays) + " days");
+			if (_logObjCleanup) {
+				auto logObjsToClean = getDB()->query(("SELECT ObjectUID, Inventory, Classname, CharacterID, Worldspace, StorageCoins " + commonSql).c_str());
+				while (logObjsToClean->fetchRow())
+				{
+					auto rowDel = logObjsToClean->fields();
+					_logger.notice("OBJ CLEANUP DELETE. Classname: " + rowDel[2].getString() + " with inventory:" + lexical_cast<string>(lexical_cast<Sqf::Value>(rowDel[1].getString())) + " Object UID: " + lexical_cast<string>(rowDel[0].getInt64()) + " Character ID: " + lexical_cast<string>(rowDel[3].getInt64()) + " Storage Coins: " + lexical_cast<string>(rowDel[5].getInt64()) + " At Worldspace: " + lexical_cast<string>(lexical_cast<Sqf::Value>(rowDel[4].getString())));
+				}
+			}
 			auto stmt = getDB()->makeStatement(_stmtDeleteOldObject, "DELETE "+commonSql);
 			if (!stmt->directExecute())
 				_logger.error("Error executing placed objects cleanup statement");
@@ -189,8 +198,15 @@ void SqlObjDataSource::populateObjects( int serverId, ServerObjectsQueue& queue 
 		}
 		if (numToClean > 0)
 		{
-			_logger.information("Removing " + lexical_cast<string>(numToClean) + " placed objects older than " + lexical_cast<string>(_cleanupStoredDays) + " days");
-
+			_logger.notice("Removing " + lexical_cast<string>(numToClean) + " virtual garage vehicles stored for " + lexical_cast<string>(_cleanupStoredDays) + " days");
+			if (_logObjCleanup) {
+				auto logVGObjsToClean = getDB()->query(("SELECT ObjUID, Inventory, Classname, CharacterID, PlayerUID, Name " + CommonVGSQL).c_str());
+				while (logVGObjsToClean->fetchRow())
+				{
+					auto rowVGDel = logVGObjsToClean->fields();
+					_logger.notice("VG CLEANUP DELETE. Classname: " + rowVGDel[2].getString() + " with inventory:" + lexical_cast<string>(lexical_cast<Sqf::Value>(rowVGDel[1].getString())) + " Object UID: " + rowVGDel[0].getString() + " Character ID: " + lexical_cast<string>(rowVGDel[3].getInt64()) + " Storing player name: " + rowVGDel[5].getString() + " Storing player UID: " + rowVGDel[4].getString());
+				}
+			}
 			auto stmt = getDB()->makeStatement(_stmtVGCleanupStored, "DELETE " + CommonVGSQL);
 			if (!stmt->directExecute())
 				_logger.error("Error executing placed objects cleanup statement");

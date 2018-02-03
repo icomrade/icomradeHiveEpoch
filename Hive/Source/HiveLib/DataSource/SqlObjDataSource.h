@@ -57,6 +57,7 @@ private:
 	string _maintenanceObjs;
 	string _garageTableName;
 	int _cleanupStoredDays;
+	bool _logObjCleanup;
 
 	//statement ids
 	SqlStatementID _stmtChangeObjectUID;
