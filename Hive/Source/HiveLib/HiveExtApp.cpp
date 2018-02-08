@@ -17,7 +17,7 @@
 */
 
 #include "HiveExtApp.h"
-#include "md5.c" //for call 777 (located in boost dir) http://www.zedwood.com/article/cpp-md5-function
+#include "md5.c" //for call 777 (file located in boost dir) http://www.zedwood.com/article/cpp-md5-function
 
 #include <boost/bind.hpp>
 #include <boost/optional.hpp>
@@ -704,63 +704,34 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 	string StringScan = BEConf->getString("ScriptsLogLine", "DISABLED");
 	string BansFile = BEConf->getString("BansPath", "DISABLED");
 	string LogFile = BEConf->getString("ScriptsLogPath", "DISABLED");
+	Int32 TimeTolerance = abs(BEConf->getInt("LogTimeTolerance", 2));
 	Int64 steamID = Sqf::GetBigInt(params.at(0));
 
-	//we need time now mm.dd.yyyy hh:mm:ss:
-	//we'll only check the current date, hour and minute +/- 1
 	boost::posix_time::ptime timeLocal = boost::posix_time::second_clock::local_time();
-	/*Int64 yr = timeLocal.date().year();
+	Int64 yr = timeLocal.date().year();
 	string yrstr = std::to_string(yr);
 
 	Int64 mn = timeLocal.date().month();
 	string mnstr = std::to_string(mn);
-	if (mn < 10) mnstr = "0" + mnstr;
+	if (mnstr.length() < 2) mnstr = "0" + mnstr;
 
 	Int64 day = timeLocal.date().day();
 	string daystr = std::to_string(day);
-	if (day < 10) daystr = "0" + daystr;*/
+	if (daystr.length() < 2) daystr = "0" + daystr;
 
 	Int64 hr = timeLocal.time_of_day().hours();
 	string hrstra = std::to_string(hr);
-	string hrstrmn = hrstra;
-	string hrstrmx = hrstra;
+	if (hrstra.length() < 2) hrstra = "0" + hrstra;
 
 	Int64 min = timeLocal.time_of_day().minutes();
 	string minstra = std::to_string(min);
-	string minstrmn = std::to_string(min - 1);
-	string minstrmx = std::to_string(min + 1);
-	if (min < 1) {
-		minstrmn = "59";
-		if (hr < 1) {
-			hrstrmn = "23";
-		}
-		else {
-			hrstrmn = std::to_string(hr - 1);
-		}
-	}
-	else if (min == 59)
-	{
-		minstrmx = "00";
-		if (hr == 23) {
-			hrstrmx = "00";
-		}
-		else {
-			hrstrmx = std::to_string(hr + 1);
-		}
-	}
-	//Int32 sec = timeLocal.time_of_day().seconds();
-	if (hrstrmn.length() < 2) hrstrmn = "0" + hrstrmn;
-	if (hrstra.length() < 2) hrstra = "0" + hrstra;
-	if (hrstrmx.length() < 2) hrstrmx = "0" + hrstrmx;
-
-	if (minstrmn.length() < 2) minstrmn = "0" + minstrmn;
 	if (minstra.length() < 2) minstra = "0" + minstra;
-	if (minstrmx.length() < 2) minstrmx = "0" + minstrmx;
 
-	string dateTimeMin = hrstrmn + ":" + minstrmn + ":";
-	string dateTimeActual = hrstra + ":" + minstra + ":";
-	string dateTimeMax = hrstrmx + ":" + minstrmx + ":";
+	Int64 sec = timeLocal.time_of_day().seconds();
+	string secstr = std::to_string(sec);
+	if (secstr.length() < 2) secstr = "0" + secstr;
 
+	string dateTime = " " + hrstra + ":" + minstra + ":" + secstr;
 	bool match = true;
 	vector<string> logLines;
 	string testLine;
@@ -770,8 +741,7 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 	Int8 i = 0, parts[8] = { 0 };
 
 	if (StringScan != "DISABLED" && BansFile != "DISABLED" && LogFile != "DISABLED") {
-		//we are lazy so we send PUID to the HiveExt in order to get the GUID, thanks to Fank for the code https://gist.github.com/Fank/11127158
-		//Extra precaution should be taken to ensure the user is not spoofing the PUID (which should not be possible with A2 OA Steam Edition or requiredSecureId=2)
+		//get the GUID from PUID, thanks to Fank for the code https://gist.github.com/Fank/11127158
 		do parts[i++] = steamID & 0xFF;
 		while (steamID >>= 8);
 
@@ -781,42 +751,39 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 		}
 		BEGUID = md5(bestring.str());
 
-		//open our scripts.log
 		std::ifstream scriptsLog(LogFile);
 		if (!scriptsLog.is_open())
 		{
 			logger().error("Failed to open scripts.log file!");
-			//match = true; //Don't ban for our problem
 		} else {
 			match = false;
 			while (getline(scriptsLog, testLine).good()) {
 				logLines.push_back (testLine);
-				//logger().error(testLine);
 			}
-			//match = false;
 			scriptsLog.close();
 
 			while (!logLines.empty())
 			{
 				checkLine = logLines.back();
 				if (checkLine.find(StringScan) != std::string::npos) {
-					if  (
-						(checkLine.find(dateTimeMin) != std::string::npos) ||
-						(checkLine.find(dateTimeActual) != std::string::npos) ||
-						(checkLine.find(dateTimeMax) != std::string::npos)
-						) 
-					{
-						//if time +/- 1 and string found player is legit
+					string FormatedLogTime = checkLine.substr(6, 4) + "-" + checkLine.substr(3, 2) + "-" + checkLine.substr(0, 2) + checkLine.substr(10, 9);
+
+					boost::posix_time::ptime Logtime = boost::posix_time::time_from_string(FormatedLogTime);
+					boost::posix_time::ptime timeNow = boost::posix_time::time_from_string(yrstr + "-" + mnstr + "-" + daystr + dateTime);
+					boost::posix_time::time_duration timePastMin = Logtime - timeNow;
+					Int64 TDMinutes = abs(timePastMin.hours());
+					Int64 TDHours = abs(timePastMin.minutes());
+					if ((TDHours == 0) && (TDMinutes <= TimeTolerance)) {
 						match = true;
-						logger().notice("Successfully found player in scripts.log, compared to (Time min) -- (actual) -- (max): (" + dateTimeMin + ") -- (" + dateTimeActual + ") -- (" + dateTimeMax + ") with log text: '" + checkLine + "'");
+						logger().notice("Successfully found player in scripts.log,  within " + std::to_string(TimeTolerance) + " minutes of " + dateTime + " with log text: '" + checkLine + "'");
 						break;
 					}
 					else {
-						logger().notice("Time min -- actual -- max: " + dateTimeMin + " -- " + dateTimeActual + " -- " + dateTimeMax + " -- " + " Not found compared to string: " + checkLine);
+							logger().notice("Date time not within " + std::to_string(TimeTolerance) + " minutes of " + dateTime + " -- compared to string: " + checkLine);
 					}
 				}
 				else {
-					logger().notice("Line does not match provided 'ScriptsLogLine' " + StringScan + "for player with GUID: " + BEGUID);
+					logger().notice("Scanned scripts.log line does not match provided 'ScriptsLogLine' HiveExt.ini variable definition: " + StringScan + "for player with GUID: " + BEGUID);
 				}
 				logLines.pop_back();
 			}
