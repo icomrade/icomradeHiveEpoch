@@ -342,9 +342,17 @@ Sqf::Value HiveExtApp::streamObjects( Sqf::Parameters params)
 				retVal.push_back(string("Instance already initialized"));
 			} else {
 				string LastFileName = boost::get<string>(params.at(0));
-				remove(LastFileName.c_str()); //delete file
-				retVal.push_back(string("NOTICE"));
-				retVal.push_back(string("" + LastFileName + " has been deleted"));
+				if (remove(LastFileName.c_str()) != 0) {
+					string exception = strerror(errno);
+					logger().warning("Failed to delete previous hive DB file, please manually delete the file. Failure reason: " + exception + " occured when deleting file:" + LastFileName);
+					retVal.push_back(string("WARNING"));
+					retVal.push_back(string("Failed to delete previous hive DB file, please manually delete the file. Failure reason: " + exception + " occured when deleting file:" + LastFileName));
+				}
+				else {
+					logger().notice(LastFileName + " has been deleted");
+					retVal.push_back(string("NOTICE"));
+					retVal.push_back(string(LastFileName + " has been deleted"));
+				}
 			}
 			return retVal;
 		}
