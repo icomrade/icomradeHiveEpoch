@@ -699,7 +699,6 @@ Sqf::Value HiveExtApp::updateGlobalCoins(Sqf::Parameters params)
 }
 Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 {
-	//DON'T FORGET TO ROTATE YOUR SCRIPTS.LOG EVERY RESTART, OTHERWISE THIS WILL BE SLOW AS FUCK
 	Poco::AutoPtr<Poco::Util::AbstractConfiguration> BEConf(config().createView("Battleye"));
 	string StringScan = BEConf->getString("ScriptsLogLine", "DISABLED");
 	string BansFile = BEConf->getString("BansPath", "DISABLED");
@@ -771,15 +770,16 @@ Sqf::Value HiveExtApp::BEScriptScan(Sqf::Parameters params)
 					boost::posix_time::ptime Logtime = boost::posix_time::time_from_string(FormatedLogTime);
 					boost::posix_time::ptime timeNow = boost::posix_time::time_from_string(yrstr + "-" + mnstr + "-" + daystr + dateTime);
 					boost::posix_time::time_duration timePastMin = Logtime - timeNow;
+					Int64 TDSeconds = abs(timePastMin.seconds());
 					Int64 TDMinutes = abs(timePastMin.hours());
 					Int64 TDHours = abs(timePastMin.minutes());
-					if ((TDHours == 0) && (TDMinutes <= TimeTolerance)) {
+					if ((TDHours == 0) && ((TDMinutes < TimeTolerance) || ((TDMinutes == TimeTolerance) && (TDSeconds < 5)))) {
 						match = true;
-						logger().notice("Successfully found player in scripts.log,  within " + std::to_string(TimeTolerance) + " minutes of " + dateTime + " with log text: '" + checkLine + "'");
+						logger().notice("Successfully found player in scripts.log,  within " + std::to_string(TimeTolerance) + " minutes of" + dateTime + " with log text: '" + checkLine + "'");
 						break;
 					}
 					else {
-							logger().notice("Date time not within " + std::to_string(TimeTolerance) + " minutes of " + dateTime + " -- compared to string: " + checkLine);
+						logger().notice("Date time not within " + std::to_string(TimeTolerance) + " minutes of" + dateTime + " -- compared to string: " + checkLine);
 					}
 				}
 				else {
