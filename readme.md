@@ -7,7 +7,7 @@
 2. Install Python (any version works, use latest 3.x), and check add to PATH. click disable PATH limit then close installer https://www.python.org/downloads/
 
 3. Download and build boost http://www.boost.org/ in the HiveDeps folder (We need the libs, prebuilt packages are not acceptable)
-	* download the latest version of boost (this guide was made using 1.63)
+	* download the latest version of boost
 	* Extract the files (not the root folder) to your C:\HiveDeps\boost directory
 
   #### Building Boost
@@ -15,40 +15,21 @@
   2. ```CD C:\HiveDeps\boost```
   3. ```bootstrap.bat```
   4. ```b2.exe toolset=msvc-14.1 --build-type=complete variant=release,debug runtime-link=shared,static link=static threading=multi address-model=32 --without-log --stagedir=lib\x86\v141 --build-dir=out\x86\v141```
-	  * NOTE: boost 1.66 has no build out of the box for VS2017, you must edit project-config.jam
-	  ```using msvc ;``` -----> ```using msvc : 14.1 : "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.12.25827\bin\Hostx64\x64\cl.exe";```
 	  * NOTE: if the boost build produces libs with VC140 you will need to rename them to your compiler version for VC140 -> VC141 run the following in the command prompt (CD to the lib dir) https://pastebin.com/Gp5gPTLa
 
 #### Building POCO
-1. Download Poco here (We use 1.7.8): https://pocoproject.org/download/index.html and extract files to C:\HiveDeps\poco
+1. Download Poco here (We use 1.7.8): https://github.com/pocoproject/poco/releases and extract files to C:\HiveDeps\poco
 2. POCO requires OpenSSL, MySQL Connector and ODBC (part of Windows SDK)
 3. install Windows 8.1 SDK from this link if building fails https://developer.microsoft.com/en-us/windows/downloads/windows-8-1-sdk
-4. download OpenSSL https://www.openssl.org/source/ and extract to C;\HiveDeps\openssl, rename openssl-VER to openssl, we need to configure OpenSSL
-    * Download and install NASM http://www.nasm.us/
-    * download and install PERL for windows, I used Strawberry PERL http://strawberryperl.com/releases.html
-    * We need to build both MT and MD libraries
-    * ```@set path=C:\Users\Nick-PC\AppData\Local\NASM;%path%```
-    * ```@set path=C:\Strawberry\perl\bin;%path%```
-    * ```CD C:\openssl```
-    * ```perl Configure VC-WIN32```
-    * ```nmake```
-    * ```nmake test```
-    * We use a buiuld script from https://www.npcglib.org/~stathis/blog/precompiled-openssl/ to build both static and dynamic (MT/MD) libraries for POCO.
-    * alternatively you may just want to download the compiled version and copy over the libs, but there isn't a precompiled MSVC 2017 version yet
-    * Download and install CygWin https://www.cygwin.com/ we need DOS2UNIX, PATCH, and 7Z (use view: FULL and search feature)
-    * Download the applicable version of the openssl build script, I used build-openssl-1.1.0e.bat AND PATCH openssl-1.1.0e.patch then place in your C:\openssl folder
-    * Download perlEnv.bat here: https://www.npcglib.org/~stathis/downloads/perlenv.bat and place in your perl root director
-    * edit the build script, find and replace D:\ with C:\ or your applicable drive. Edit \opensource\ -> \ and in the buildpath variable remove ```-!PROJECT_VERSION!``` be sure to verify your CygWin and PERL paths!
-    * Edit VS_VERSION to your version, and VISUAL_STUDIO_VC to the correct path where your VS install has vcvarsall.bat i.e. mine is ```C:\Program Files (x86)\Microsoft Visual Studio\!VS_VERSION!\Community\VC\Auxiliary\Build```
-    * ```CD C:\openssl```
-    * ```build-openssl-1.1.0e.bat patch build x86 static release```
-    * ```build-openssl-1.1.0e.bat build all```
-    * applicable files will be in the C:\Openssl-build-VER-VER and C:\Openssl-dist-VER-VER folders MD Release (C:\openssl-VER-VER\openssl-x86-shared-release-VER) MT Release (C:\openssl-VER-VER\openssl-x86-static-release-VER)
-    * find libsslmd.lib and create a copy, rename to ssleay32, and libcrypto -> libeay32. same again for the .exp files (do the same for both MT and MD files) BE SURE TO CHANGE MT AND MD TO LOWERCASE!
-    * Copy .lib and .exp files from the openssl folder to C:\openssl\include\lib (you may need to make the lib folder)
+4. Poco requires OpenSSL, but thankfully the Poco team has made a repository to easily build it on our own.
+    * download this repository as a zip https://github.com/pocoproject/openssl/tree/master
+    * extract the contents of the zip to C:\HiveDeps\poco\openssl (the files will be zipped inside a folder 'openssl-master' open that folder then extract the files from inside it to the poco\openssl directory)
+    * navigate in your VS build CMD and build:
+    * ``` CD C:\HiveDeps\poco\openssl ```
+    * ```buildall.cmd```
 5. Download and build the MySQL client connector in the C:\HiveDeps\MySQL folder
 [REQUIRES CMAKE]
-    * https://dev.mysql.com/downloads/connector/c/ download the source code OS
+    * https://downloads.mysql.com/archives/c-c/ Select operating system: 'source code' and download the windows version
     * Edit the Poco buildwin.cmd file to set MYSQL_DIR=C:\HiveDeps\MySQL
     * To build:
     * (if your CMake path is not set) @set path=C:\Program Files (x86)\CMake\bin;%path%
