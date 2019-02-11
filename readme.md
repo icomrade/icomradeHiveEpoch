@@ -42,9 +42,9 @@
     1. C:\HiveDeps\MySQL\libmysql\Release + C:\HiveDeps\MySQL\libmysql\Debug
     * download this repo, https://github.com/rajkosto/deps-mysql and merge the include directories. DO NOT OVERWRITE ANY FILES
     * NOTE you need to clean and rebuild a Dynamically linked version of MySQL for the hive AFTER building poco! This is not covered, since it's actually not necessary unless you change the DatabaseMySQL.dll code
-    3. ```CD C:\HiveDeps\poco```
-    4. ```buildwin 150 build all both Win32 samples```
-    4a. Replace 150 with your VS MSVC version
+    2. ```CD C:\HiveDeps\poco```
+    3. ```buildwin 150 build all both Win32 samples```
+    * Note: Replace 150 with your VS MSVC version
 
 #### Building intel TBB
 1. download from https://www.threadingbuildingblocks.org/download#stable-releases (guide is using 4.4 u5)
