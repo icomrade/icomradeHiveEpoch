@@ -1,7 +1,7 @@
 # Dependencies
-* The instructions for buiulding Dependencies are based on VS 2017, modify MSVC versions according to your VS version
+* The instructions for building Dependencies are based on VS 2017, modify MSVC versions according to your VS version
 * Unless otherwise noted this guide is performed from the VS tools command prompt
-* This project reuires visual studio to be run as an administrator!
+* This project requires visual studio to be run as an administrator!
 1. Copy the HiveDeps folder into your C:\ drive
 
 2. Install Python (any version works, use latest 3.x), and check add to PATH. click disable PATH limit then close installer https://www.python.org/downloads/
@@ -53,7 +53,8 @@
 4. Save all and close visual studio
 5. CD C:\HiveDeps\TBB
 6. gmake
-7. Your output will be: C:\HiveDeps\TBB\build\windows_ia32_cl_vc14_release
+7. Your output will be: C:\HiveDeps\TBB\build\windows_ia32_cl_vc[YOUR_VERSION]_release
+8. Make sure the output folder matches the TBB.props AdditionalLibraryDirectories path!
 
 #### Building detours
 1. download the latest version of Microsoft Detours https://www.microsoft.com/en-us/download/details.aspx?id=52586 (extract to C:\kfw-2.6.5),
@@ -69,7 +70,7 @@
 
 #### Finally building the Hive
 1. resolve your lib and include paths
-    * if you are using the windows tooal and apps SDK version 10 you will need to add an include path ```$(UniversalCRT_IncludePath)``` to all projects
+    * if you are using the windows tool and apps SDK version 10 you will need to add an include path ```$(UniversalCRT_IncludePath)``` to all projects
     * right click each project > properties > C/C++ > General > add ```$(UniversalCRT_IncludePath)``` to your additional includes directory (replace [VER] with your SDK version path)
     * replace text in the additional includes field with: ```%(AdditionalIncludeDirectories)$(UniversalCRT_IncludePath)C:\HiveDeps\boost;C:\Program Files (x86)\Windows Kits\10\Include\[VER]\ucrt```
     1. you need to edit the boost lib directory to the Library Directories field of project properties -> VC++ Directories. where VER is your MSVC VER
@@ -77,8 +78,8 @@
         * add first to the input field, keep any text already in the box ```C:\HiveDeps\boost\lib\x86\VER\lib;```
         * FOR SDK 10 USERS ONLY! ```C:\HiveDeps\boost\lib\x86\VER\lib;C:\Program Files (x86)\Windows Kits\10\Lib\VER\ucrt\x86;```
     2. Edit TBB.props file if it does not reflect you current TBB lib path
-        * ```$(MSBuildThisFileDirectory)build\windows_ia32_cl_vc14_release;``` ----> ```$(MSBuildThisFileDirectory)build\windows_ia32_cl_[YOUR VERSION]_release;```
-2. if you recieve any missing include errors, google them, chances are the VS installation requires additional components
+        * ```$(MSBuildThisFileDirectory)build\windows_ia32_cl_vc14.1_release;``` ----> ```$(MSBuildThisFileDirectory)build\windows_ia32_cl_[YOUR VERSION]_release;```
+2. if you receive any missing include errors, Google them, chances are the VS installation requires additional components
 
 # Common Errors
 1. Double check your include and library paths if you are missing any .lib .h files, or links. You need to change paths in this guide to YOUR actual path and version after building the Dependencies
