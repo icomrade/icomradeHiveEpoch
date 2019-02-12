@@ -38,12 +38,12 @@
     * Open ALL_BUILD.vcxproj and build the RELEASE VERSION of the solution
     * Copy the files in  C:\HiveDeps\MySQL\libmysql\Release to your C:\HiveDeps\poco\lib folder
     * in the C:\HiveDeps\MySQL folder create a new lib folder
-    * Copy the files in the following directors to C:\HiveDeps\MySQL\
+    * Copy the files in the following directories to C:\HiveDeps\MySQL\
     1. C:\HiveDeps\MySQL\libmysql\Release + C:\HiveDeps\MySQL\libmysql\Debug
-    * download this repo, https://github.com/rajkosto/deps-mysql and merge the include directories. DO NOT OVERWRITE ANY FILES
-    * NOTE you need to clean and rebuild a Dynamically linked version of MySQL for the hive AFTER building poco! This is not covered, since it's actually not necessary unless you change the DatabaseMySQL.dll code
-    2. ```CD C:\HiveDeps\poco```
-    3. ```buildwin 150 build all both Win32 samples```
+    	* download this repo, https://github.com/rajkosto/deps-mysql and merge the include directories. DO NOT OVERWRITE ANY FILES
+    	* NOTE you need to clean and rebuild a Dynamically linked version of MySQL for the hive AFTER building poco! This is not covered, since it's actually not necessary unless you change the DatabaseMySQL.dll code
+6. ```CD C:\HiveDeps\poco```
+7. ```buildwin 150 build all both Win32 samples```
     * Note: Replace 150 with your VS MSVC version
 
 #### Building intel TBB
