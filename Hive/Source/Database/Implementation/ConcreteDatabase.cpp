@@ -289,7 +289,7 @@ unique_ptr<QueryResult> ConcreteDatabase::queryParams(const char* format,...)
 	va_end(ap);
 
 	if (!checkFmtError(res,format))
-		return false;
+		return nullptr;
 
 	return query(szQuery);
 }
@@ -306,7 +306,7 @@ unique_ptr<QueryNamedResult> ConcreteDatabase::namedQueryParams(const char* form
 	va_end(ap);
 
 	if (!checkFmtError(res,format))
-		return false;
+		return nullptr;
 
 	return namedQuery(szQuery);
 }

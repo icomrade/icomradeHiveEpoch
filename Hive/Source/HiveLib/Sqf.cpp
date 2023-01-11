@@ -221,7 +221,7 @@ namespace
 			int parsed = -1;
 			try
 			{
-				parsed = boost::lexical_cast<int>(strInt);
+				parsed = lexical_cast<int>(strInt);
 			}
 			catch (boost::bad_lexical_cast)
 			{
@@ -251,7 +251,7 @@ namespace
 			Int64 parsed = -1;
 			try
 			{
-				parsed = boost::lexical_cast<Int64>(strInt);
+				parsed = lexical_cast<Int64>(strInt);
 			}
 			catch (boost::bad_lexical_cast)
 			{
@@ -284,7 +284,7 @@ namespace
 
 			try
 			{
-				double numeric = boost::lexical_cast<double>(someStr);
+				double numeric = lexical_cast<double>(someStr);
 				return (*this)(numeric);
 			}
 			catch (const boost::bad_lexical_cast&)
@@ -300,11 +300,9 @@ namespace
 	};
 };
 
-#include <boost/lexical_cast.hpp>
-using boost::lexical_cast;
-
 namespace Sqf
 {
+
 	bool IsNull(const Value& val)
 	{
 		return boost::apply_visitor(NullVisitor(),val);

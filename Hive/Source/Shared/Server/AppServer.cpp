@@ -26,7 +26,9 @@
 #include <Poco/FormattingChannel.h>
 #include <Poco/SplitterChannel.h>
 #include <Poco/AsyncChannel.h>
-#include <Poco/String.h>
+//#include <Poco/String.h> VS2022 linker driving me mad with unresolved external... switching this to Boost
+#include<boost/algorithm/string.hpp>
+
 #include <Poco/Path.h>
 
 void AppServer::initialize( Application& self )
@@ -133,7 +135,8 @@ void AppServer::initLogger()
 	}
 	Logger::root().setChannel(splitChan);
 
-	std::string loggingLevel = Poco::toLower(logConf->getString("Level","information"));
+	//std::string loggingLevel = Poco::toLower(logConf->getString("Level","information")); //update 2023, switch to Boost ToLower()
+	std::string loggingLevel = boost::algorithm::to_lower_copy(logConf->getString("Level","information"));
 	Logger::root().setLevel(loggingLevel);
 
 	this->setLogger(Logger::get(appName));
@@ -144,9 +147,10 @@ void AppServer::enableAsyncLogging()
 	using Poco::Logger;
 	using Poco::AutoPtr;
 	using Poco::SplitterChannel;
-	using Poco::AsyncChannel;	
+	using Poco::AsyncChannel;
 
-	SplitterChannel* splitChan = dynamic_cast<SplitterChannel*>(Logger::root().getChannel());
+	Poco::Channel* root = Logger::root().getChannel();//HIVE UPDATE 2023 - Poco::Channel::Ptr -> Poco::Channel*
+	SplitterChannel* splitChan = dynamic_cast<SplitterChannel*>(root);
 	if (splitChan != nullptr) //only if its not async already
 	{
 		//make it async

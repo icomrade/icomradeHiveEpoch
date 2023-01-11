@@ -20,6 +20,8 @@
 
 #include "Shared/Common/Types.h"
 #include <boost/variant.hpp>
+#include <boost/lexical_cast.hpp>
+using boost::lexical_cast;
 
 namespace Sqf
 {

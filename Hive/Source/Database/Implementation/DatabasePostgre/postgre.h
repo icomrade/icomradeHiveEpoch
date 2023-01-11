@@ -6,7 +6,7 @@
 #endif
 #define FD_SETSIZE 1024
 #include <winsock2.h>
-#include <postgre/libpq-fe.h>
+#include <libpq-fe.h>
 #else
 #include <libpq-fe.h>
 #endif

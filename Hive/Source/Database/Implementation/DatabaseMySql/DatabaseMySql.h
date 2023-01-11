@@ -24,7 +24,7 @@
 
 #ifdef WIN32
 #include <winsock2.h>
-#include <mysql/mysql.h>
+#include <C:\Program Files (x86)\MySQL\MySQL Server 5.7\include\mysql.h>
 #else
 #include <mysql.h>
 #endif
@@ -111,10 +111,9 @@ public:
 		{
 			clear();
 
-			using std::swap;
-			swap(this->myRes,rhs.myRes);
-			swap(this->numFields,rhs.numFields);
-			swap(this->numRows,rhs.numRows);
+			std::swap(this->myRes,rhs.myRes);
+			std::swap(this->numFields,rhs.numFields);
+			std::swap(this->numRows,rhs.numRows);
 		}
 
 		MYSQL_RES* myRes;

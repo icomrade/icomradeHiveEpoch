@@ -21,7 +21,8 @@
 
 #include "Shared/Library/SharedLibraryLoader.h"
 #include <Poco/Util/AbstractConfiguration.h>
-#include <Poco/String.h>
+//#include <Poco/String.h> VS2022 linker driving me mad with unresolved external... switching this to Boost
+#include<boost/algorithm/string.hpp>
 
 namespace
 {
@@ -42,7 +43,8 @@ string DatabaseLoader::GetDbTypeFromConfig( Poco::Util::AbstractConfiguration* d
 	else
 		dbTypeStr = "MySql";
 
-	Poco::trimInPlace(dbTypeStr);
+	//Poco::trimInPlace(dbTypeStr); //Update 2023, switch to Boost Trim()
+	boost::algorithm::trim(dbTypeStr);
 
 	if (dbTypeStr.length() < 1)
 		throw DatabaseLoader::CreationError(string("Unspecified DB type"));
@@ -166,9 +168,11 @@ Database::KeyValueColl DatabaseLoader::MakeConnParams(Poco::Util::AbstractConfig
 		for (auto it=keys.begin(); it!=keys.end(); ++it)
 		{
 			string value = dbConfig->getString(*it);
-			Poco::trimInPlace(value);
+			//Poco::trimInPlace(value); //Update 2023, switch to Boost Trim()
+			boost::algorithm::trim(value);
 			string keyStr = std::move(*it);
-			Poco::toLowerInPlace(keyStr);
+			//Poco::toLowerInPlace(keyStr); //Update 2023, switch to Boost toLower()
+			boost::algorithm::to_lower(keyStr);
 			keyVals.insert(std::make_pair(std::move(keyStr),std::move(value)));
 		}
 	}	

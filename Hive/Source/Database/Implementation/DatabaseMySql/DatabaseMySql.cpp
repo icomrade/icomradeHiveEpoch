@@ -97,6 +97,9 @@ MySQLConnection::MySQLConnection( ConcreteDatabase& db, const Database::KeyValue
 		//Disable automatic reconnection, we will do this manually (to re-create broken statements and such)
 		my_bool reconnect = 0;
 		mysql_options(_myHandle, MYSQL_OPT_RECONNECT, &reconnect);
+		//Update 2023 - Force TLS1.2
+		mysql_options(_myHandle, MYSQL_OPT_TLS_VERSION, "TLSv1.2");
+
 	}
 
 	_host = "localhost";
