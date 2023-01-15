@@ -88,7 +88,7 @@ ArmaConsoleChannel::~ArmaConsoleChannel()
 {
 }
 
-#include <detours/detours.h>
+#include <detours.h>
 
 namespace 
 { 

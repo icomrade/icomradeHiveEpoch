@@ -149,8 +149,8 @@ void AppServer::enableAsyncLogging()
 	using Poco::SplitterChannel;
 	using Poco::AsyncChannel;
 
-	Poco::Channel* root = Logger::root().getChannel();//HIVE UPDATE 2023 - Poco::Channel::Ptr -> Poco::Channel*
-	SplitterChannel* splitChan = dynamic_cast<SplitterChannel*>(root);
+	Poco::SplitterChannel::Ptr splitChan = Logger::root().getChannel().cast<SplitterChannel>();
+
 	if (splitChan != nullptr) //only if its not async already
 	{
 		//make it async

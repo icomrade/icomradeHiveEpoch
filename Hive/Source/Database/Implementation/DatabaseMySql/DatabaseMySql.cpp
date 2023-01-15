@@ -98,8 +98,12 @@ MySQLConnection::MySQLConnection( ConcreteDatabase& db, const Database::KeyValue
 		my_bool reconnect = 0;
 		mysql_options(_myHandle, MYSQL_OPT_RECONNECT, &reconnect);
 		//Update 2023 - Force TLS1.2
-		mysql_options(_myHandle, MYSQL_OPT_TLS_VERSION, "TLSv1.2");
-
+		int setTLSFail = mysql_options(_myHandle, MYSQL_OPT_TLS_VERSION, "TLSv1.2");
+		if (setTLSFail != 0)
+		{
+			Poco::Logger& logger = _dbEngine->getLogger();
+			logger.warning("Failed to set MYSQL_OPT_TLS_VERSION: TLSv1.2! You will not be able to connect to MySQL Server > 8.0.27");
+		}
 	}
 
 	_host = "localhost";

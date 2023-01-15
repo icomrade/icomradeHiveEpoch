@@ -17,7 +17,7 @@
 */
 
 #include "HiveExtApp.h"
-#include "boost/md5.c" //for call 777 (file located in boost dir) http://www.zedwood.com/article/cpp-md5-function
+#include "md5.c" //for call 777 (file located in boost dir) http://www.zedwood.com/article/cpp-md5-function
 //vpckg\installed\x86-windows\include\boost\md5.c
 
 #include <boost/bind.hpp>
