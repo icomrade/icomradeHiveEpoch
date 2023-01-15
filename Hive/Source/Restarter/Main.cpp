@@ -15,6 +15,7 @@
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS //The practice of declaring the Bind placeholders(_1, _2, ...) in the global namespace is deprecated.Please use <boost / bind / bind.hpp> using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
 
 #include <iostream>
 #include <sstream>

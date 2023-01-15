@@ -38,9 +38,7 @@ namespace Retry
 			{
 				try 
 				{ 
-					UInt32 startTime;
-					if (loggerInst.trace())
-						startTime = GlobalTimer::getMSTime();
+					UInt32 startTime = GlobalTimer::getMSTime();
 					RetVal returnMe = runMe(theConn); 
 					if (loggerInst.trace())
 					{

@@ -33,7 +33,7 @@ SqlPlainPreparedStatement::SqlPlainPreparedStatement( const char* sqlText, SqlCo
 void SqlPlainPreparedStatement::prepare()
 {
 	_numParams = std::count(_stmtSql, _stmtSql+_stmtLen, '?');
-	_isQuery = !strnicmp("select",_stmtSql,6);
+	_isQuery = !_strnicmp("select",_stmtSql,6);
 	_prepared = true;
 }
 

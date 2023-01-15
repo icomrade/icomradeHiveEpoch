@@ -107,7 +107,7 @@ public:
 		ResultInfo() : myRes(nullptr) { clear(); }
 		~ResultInfo() { clear(); }
 
-		ResultInfo(ResultInfo&& rhs) : myRes(nullptr)
+		ResultInfo(ResultInfo&& rhs) noexcept : myRes(nullptr)
 		{
 			clear();
 

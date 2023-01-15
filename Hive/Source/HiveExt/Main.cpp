@@ -23,16 +23,25 @@ BOOL APIENTRY DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpRese
 {
 	switch (ul_reason_for_call)
 	{
-	case DLL_PROCESS_ATTACH:
-		ExtStartup::InitModule([](string profileFolder){ return new DirectHiveApp(profileFolder); });
-		break;
-	case DLL_THREAD_ATTACH:
-		break;
-	case DLL_THREAD_DETACH:
-		break;
-	case DLL_PROCESS_DETACH:
-		ExtStartup::ProcessShutdown();
-		break;
+		case DLL_PROCESS_ATTACH:
+			ExtStartup::InitModule([](string profileFolder){ return new DirectHiveApp(profileFolder); });
+			break;
+		case DLL_THREAD_ATTACH:
+			break;
+		case DLL_THREAD_DETACH:
+			break;
+		case DLL_PROCESS_DETACH:
+		{
+			if (lpReserved != nullptr)
+			{
+				// Raymond Chen : The building is being demolished. You don't need to sweep the floors.
+				break;
+			}
+
+			// Perform any necessary cleanup.
+			ExtStartup::ProcessShutdown();
+			break;
+		}
 	}
 	return TRUE;
 }

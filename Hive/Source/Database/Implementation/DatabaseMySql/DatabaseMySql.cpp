@@ -489,7 +489,7 @@ void MySqlPreparedStatement::prepare()
 	//Fetch result set meta information
 	_myResMeta = mysql_stmt_result_metadata(_myStmt);
 	//if we do not have result metadata
-	if (!_myResMeta && (!strnicmp("select",_stmtSql,6)))
+	if (!_myResMeta && (!_strnicmp("select",_stmtSql,6)))
 		poco_bugcheck_msg(Poco::format("SQL: no meta information for '%s', ERROR %s",this->getSqlString(),this->lastErrorDescr()).c_str());
 
 	//set up bind input buffers

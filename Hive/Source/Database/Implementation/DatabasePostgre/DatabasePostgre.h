@@ -60,14 +60,13 @@ public:
 		ResultInfo() : pgRes(nullptr) { clear(); }
 		~ResultInfo() { clear(); }
 
-		ResultInfo(ResultInfo&& rhs) : pgRes(nullptr)
+		ResultInfo(ResultInfo&& rhs) noexcept : pgRes(nullptr)
 		{
 			clear();
 
-			using std::swap;
-			swap(this->pgRes,rhs.pgRes);
-			swap(this->numFields,rhs.numFields);
-			swap(this->numRows,rhs.numRows);
+			std::swap(this->pgRes,rhs.pgRes);
+			std::swap(this->numFields,rhs.numFields);
+			std::swap(this->numRows,rhs.numRows);
 		}
 
 		PGresult* pgRes;

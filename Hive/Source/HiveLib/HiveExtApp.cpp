@@ -15,6 +15,7 @@
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS //The practice of declaring the Bind placeholders(_1, _2, ...) in the global namespace is deprecated.Please use <boost / bind / bind.hpp> using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.
 
 #include "HiveExtApp.h"
 #include "md5.c" //for call 777 (file located in boost dir) http://www.zedwood.com/article/cpp-md5-function
@@ -813,10 +814,10 @@ Sqf::Value HiveExtApp::VGQueryVeh(Sqf::Parameters params)
 	string playerUID = Sqf::GetStringAny(params.at(0));
 	string sortColumn = "DisplayName";
 	switch (Sqf::GetIntAny(params.at(1))) {
-		case 1: sortColumn = "DateStored";
-		case 2: sortColumn = "id";
-		case 3: sortColumn = "Name";
-		case 4: sortColumn = "DateMaintained";
+		case 1: sortColumn = "DateStored"; break;
+		case 2: sortColumn = "id"; break;
+		case 3: sortColumn = "Name"; break;
+		case 4: sortColumn = "DateMaintained"; break;
 	}
 	return _objData->GetMyVGVehs(playerUID, sortColumn);
 }
@@ -1044,7 +1045,7 @@ Sqf::Value HiveExtApp::dataRequest( Sqf::Parameters params, bool async )
 		return errRtn;
 	};
 
-	auto tableName = boost::get<string>(params.at(0));
+	std::string tableName = boost::get<string>(params.at(0));
 	vector<string> fields;
 	{
 		int currIdx = -1;

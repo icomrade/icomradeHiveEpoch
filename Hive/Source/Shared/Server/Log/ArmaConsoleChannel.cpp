@@ -41,7 +41,7 @@ namespace
 			char classNameStr[256];
 			memset(classNameStr,0,sizeof(classNameStr));
 			GetClassNameA(hWnd,classNameStr,sizeof(classNameStr)-1);
-			if (!stricmp(classNameStr,"#32770")) //Dialog
+			if (!_stricmp(classNameStr,"#32770")) //Dialog
 			{
 				data->targetConsole = hWnd;
 				return false; //stops enumeration
@@ -58,7 +58,7 @@ namespace
 		char classNameStr[256];
 		memset(classNameStr,0,sizeof(classNameStr));
 		GetClassNameA(hWnd,classNameStr,sizeof(classNameStr)-1);
-		if (!stricmp(classNameStr,"RichEdit20A"))
+		if (!_stricmp(classNameStr,"RichEdit20A"))
 		{
 			data->targetRichEdit = hWnd;
 			return false; //stops enumeration

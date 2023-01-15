@@ -22,9 +22,10 @@
 QueryResultMySql::QueryResultMySql(MySQLConnection* theConn, const char* sql) : _currRes(-1)
 {
 	bool hasAnotherResult = false;
-	MySQLConnection::ResultInfo resInfo;
+	
 	do
 	{
+		MySQLConnection::ResultInfo resInfo;
 		hasAnotherResult = theConn->_MySQLStoreResult(sql,&resInfo);
 		_results.push_back(std::move(resInfo));
 	} 
