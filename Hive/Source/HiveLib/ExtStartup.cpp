@@ -125,6 +125,10 @@ void ExtStartup::InitModule( MakeAppFunction makeAppFunc )
 
 void ExtStartup::ProcessShutdown()
 {
+	// Gracefully close [root/AsyncChannel] to prevent application hang and crash on exit.
+	Poco::Logger::root().getChannel()->close();
+	Poco::Logger::shutdown();
+
 	gApp.reset();
 }
 
