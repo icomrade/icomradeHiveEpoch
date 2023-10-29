@@ -346,12 +346,12 @@ Sqf::Value HiveExtApp::streamObjects( Sqf::Parameters params)
 				string LastFileName = boost::get<string>(params.at(0));
 				if (remove(LastFileName.c_str()) != 0) {
 					string exception = strerror(errno);
-					logger().warning("Failed to delete previous hive DB file, please manually delete the file. Failure reason: " + exception + " occured when deleting file:" + LastFileName);
+					//logger().warning("Failed to delete previous hive DB file, please manually delete the file. Failure reason: " + exception + " occured when deleting file: " + LastFileName);
 					retVal.push_back(string("WARNING"));
-					retVal.push_back(string("Failed to delete previous hive DB file, please manually delete the file. Failure reason: " + exception + " occured when deleting file:" + LastFileName));
+					retVal.push_back(string("Failed to delete previous hive DB file, please manually delete the file. Failure reason: " + exception + " occured when deleting file: " + LastFileName));
 				}
 				else {
-					logger().notice(LastFileName + " has been deleted");
+					//logger().notice(LastFileName + " has been deleted");
 					retVal.push_back(string("NOTICE"));
 					retVal.push_back(string(LastFileName + " has been deleted"));
 				}
@@ -365,31 +365,37 @@ Sqf::Value HiveExtApp::streamObjects( Sqf::Parameters params)
 			Sqf::Parameters retVal = _srvObjects.front();
 			_srvObjects.pop();
 			return retVal;
-		} else {
+		}
+		else {
 			string fileName = "ObjectData" + _initKey + ".sqf"; //filename will not be predictable if the init key is appended
 			std::ofstream ofs;
 			ofs.open(fileName, std::ofstream::out | std::ofstream::trunc); //clear file contents just incase it exists
 			ofs.close();
 			ofs.open(fileName, std::ofstream::out | std::ofstream::app); //open file again to write objects
+			int objectsSize = _srvObjects.size();
 			int i = 0;
+			ofs << "[";
 
-			while (!(_srvObjects.empty())) { //write queue to file, formated as array in SQF
+			while (i < objectsSize) { //write queue to file, formated as array in SQF
 				Sqf::Value writeVal = _srvObjects.front();
-				if (_srvObjects.size() == 1) {
+				if (i >= (objectsSize - 1)) {
 					ofs << writeVal;
 					ofs << "];";
-				}
-				else if (i < 1) {
-					ofs << "[";
-					ofs << writeVal;
-					ofs << ",";
-					i = 1;
 				}
 				else {
 					ofs << writeVal;
 					ofs << ",";
 				}
 				_srvObjects.pop();
+				i++;
+			}
+
+			if (!_srvObjects.empty())
+			{
+				logger().error("Finished ObjectStream but not all objects were loaded!");
+			}
+			else {
+				logger().information("Loaded " + lexical_cast<string>(objectsSize) + " objects from the SQL database");
 			}
 
 			ofs.close();
